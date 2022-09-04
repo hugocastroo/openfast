@@ -1104,6 +1104,9 @@ subroutine ParseInputFileInfo( PriPath, InputFile, OutFileRoot, FileInfo_In, Inp
    call ParseVar( FileInfo_In, CurLine, 'GenEff', InputFileData%GenEff, ErrStat2, ErrMsg2, UnEcho )
       if (Failed())  return;
    InputFileData%GenEff = InputFileData%GenEff*0.01      
+      ! InitGenTrq		- Generator torque at init	(N/m)
+   call ParseVar( FileInfo_In, CurLine, 'InitGenTrq', InputFileData%InitGenTrq, ErrStat2, ErrMsg2, UnEcho )
+      if (Failed())  return;
       !  GenTiStr       - Method to start the generator {T: timed using TimGenOn, F: generator speed using SpdGenOn} (flag)
    call ParseVar( FileInfo_In, CurLine, 'GenTiStr', InputFileData%GenTiStr, ErrStat2, ErrMsg2, UnEcho )
       if (Failed())  return;
@@ -1355,9 +1358,6 @@ subroutine ParseInputFileInfo( PriPath, InputFile, OutFileRoot, FileInfo_In, Inp
       if (Failed())  return;
       !  BPCutoff  - Cuttoff frequency for low-pass filter on blade pitch from DLL (Hz) [used only with Bladed Interface]
    call ParseVar( FileInfo_In, CurLine, 'BPCutoff', InputFileData%BPCutoff, ErrStat2, ErrMsg2, UnEcho )
-      if (Failed())  return;
-	  ! InitGenTrq		- Generator torque at init	(N/m)
-   call ParseVar( FileInfo_In, CurLine, 'InitGenTrq', InputFileData%InitGenTrq, ErrStat2, ErrMsg2, UnEcho )
       if (Failed())  return;
 !      !  EXavrSWAP - Use extended avrSWAP with Records 1000-3500 (flag) [may not be compatible with all controllers]
 !   call ParseVar( FileInfo_In, CurLine, 'EXavrSWAP', InputFileData%EXavrSWAP, ErrStat2, ErrMsg2, UnEcho )

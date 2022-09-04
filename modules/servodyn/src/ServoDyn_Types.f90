@@ -151,6 +151,7 @@ IMPLICIT NONE
     REAL(DbKi)  :: DLL_DT      !< interval for calling DLL (must be integer multiple number of DT steps) [s]
     LOGICAL  :: DLL_Ramp      !< whether the DLL pitch should be a ramp (true) or step change (false) when DLL_DT <> DT. If true, introduces a time delay. [-]
     REAL(ReKi)  :: BPCutoff      !< The cutoff frequency for the blade pitch low-pass filter. Large values => no filter. [Hz]
+    REAL(ReKi)  :: InitGenTrq      !< Generator torque at init [N-m]
     REAL(ReKi)  :: NacYaw_North      !< Reference yaw angle of the nacelle when the upwind end points due North [used only with DLL Interface] [radians]
     INTEGER(IntKi)  :: Ptch_Cntrl      !< Record 28: Use individual pitch control {0: collective pitch; 1: individual pitch control} [used only with DLL Interface] [-]
     REAL(ReKi)  :: Ptch_SetPnt      !< Record  5: Below-rated pitch angle set-point [used only with DLL Interface] [radians]
@@ -438,6 +439,7 @@ IMPLICIT NONE
     LOGICAL  :: UseLegacyInterface      !< Flag that determines if the legacy Bladed interface is (legacy=DISCON with avrSWAP instead of CONTROLLER) [-]
     TYPE(DLL_Type)  :: DLL_Trgt      !< The addresses and names of the Bladed DLL and its procedure [-]
     LOGICAL  :: DLL_Ramp      !< determines if there is a DLL_DT-ramp time delay (true only when DLL_DT /= DT) [-]
+    REAL(ReKi)  :: InitGenTrq      !< Generator torque at init [N-m]
     REAL(ReKi)  :: BlAlpha      !< parameter for low-pass filter of blade pitch commands from the controller DLL [-]
     INTEGER(IntKi)  :: DLL_n      !< number of steps between the controller being called and SrvD being called [-]
     INTEGER(IntKi)  :: avcOUTNAME_LEN      !< Length of the avcOUTNAME character array passed to/from the DLL [-]
@@ -2416,6 +2418,7 @@ ENDIF
     DstInputFileData%DLL_DT = SrcInputFileData%DLL_DT
     DstInputFileData%DLL_Ramp = SrcInputFileData%DLL_Ramp
     DstInputFileData%BPCutoff = SrcInputFileData%BPCutoff
+    DstInputFileData%InitGenTrq = SrcInputFileData%InitGenTrq
     DstInputFileData%NacYaw_North = SrcInputFileData%NacYaw_North
     DstInputFileData%Ptch_Cntrl = SrcInputFileData%Ptch_Cntrl
     DstInputFileData%Ptch_SetPnt = SrcInputFileData%Ptch_SetPnt
@@ -2642,6 +2645,7 @@ ENDIF
       Db_BufSz   = Db_BufSz   + 1  ! DLL_DT
       Int_BufSz  = Int_BufSz  + 1  ! DLL_Ramp
       Re_BufSz   = Re_BufSz   + 1  ! BPCutoff
+      Re_BufSz   = Re_BufSz   + 1  ! InitGenTrq
       Re_BufSz   = Re_BufSz   + 1  ! NacYaw_North
       Int_BufSz  = Int_BufSz  + 1  ! Ptch_Cntrl
       Re_BufSz   = Re_BufSz   + 1  ! Ptch_SetPnt
@@ -2864,6 +2868,8 @@ ENDIF
     IntKiBuf(Int_Xferred) = TRANSFER(InData%DLL_Ramp, IntKiBuf(1))
     Int_Xferred = Int_Xferred + 1
     ReKiBuf(Re_Xferred) = InData%BPCutoff
+    Re_Xferred = Re_Xferred + 1
+    ReKiBuf(Re_Xferred) = InData%InitGenTrq
     Re_Xferred = Re_Xferred + 1
     ReKiBuf(Re_Xferred) = InData%NacYaw_North
     Re_Xferred = Re_Xferred + 1
@@ -3191,6 +3197,8 @@ ENDIF
     OutData%DLL_Ramp = TRANSFER(IntKiBuf(Int_Xferred), OutData%DLL_Ramp)
     Int_Xferred = Int_Xferred + 1
     OutData%BPCutoff = ReKiBuf(Re_Xferred)
+    Re_Xferred = Re_Xferred + 1
+    OutData%InitGenTrq = ReKiBuf(Re_Xferred)
     Re_Xferred = Re_Xferred + 1
     OutData%NacYaw_North = ReKiBuf(Re_Xferred)
     Re_Xferred = Re_Xferred + 1
@@ -11994,6 +12002,7 @@ ENDIF
     DstParamData%UseLegacyInterface = SrcParamData%UseLegacyInterface
       DstParamData%DLL_Trgt = SrcParamData%DLL_Trgt
     DstParamData%DLL_Ramp = SrcParamData%DLL_Ramp
+    DstParamData%InitGenTrq = SrcParamData%InitGenTrq
     DstParamData%BlAlpha = SrcParamData%BlAlpha
     DstParamData%DLL_n = SrcParamData%DLL_n
     DstParamData%avcOUTNAME_LEN = SrcParamData%avcOUTNAME_LEN
@@ -12597,6 +12606,7 @@ ENDIF
          DEALLOCATE(Int_Buf)
       END IF
       Int_BufSz  = Int_BufSz  + 1  ! DLL_Ramp
+      Re_BufSz   = Re_BufSz   + 1  ! InitGenTrq
       Re_BufSz   = Re_BufSz   + 1  ! BlAlpha
       Int_BufSz  = Int_BufSz  + 1  ! DLL_n
       Int_BufSz  = Int_BufSz  + 1  ! avcOUTNAME_LEN
@@ -13112,6 +13122,8 @@ ENDIF
       ENDIF
     IntKiBuf(Int_Xferred) = TRANSFER(InData%DLL_Ramp, IntKiBuf(1))
     Int_Xferred = Int_Xferred + 1
+    ReKiBuf(Re_Xferred) = InData%InitGenTrq
+    Re_Xferred = Re_Xferred + 1
     ReKiBuf(Re_Xferred) = InData%BlAlpha
     Re_Xferred = Re_Xferred + 1
     IntKiBuf(Int_Xferred) = InData%DLL_n
@@ -14017,6 +14029,8 @@ ENDIF
       IF(ALLOCATED(Int_Buf)) DEALLOCATE(Int_Buf)
     OutData%DLL_Ramp = TRANSFER(IntKiBuf(Int_Xferred), OutData%DLL_Ramp)
     Int_Xferred = Int_Xferred + 1
+    OutData%InitGenTrq = ReKiBuf(Re_Xferred)
+    Re_Xferred = Re_Xferred + 1
     OutData%BlAlpha = ReKiBuf(Re_Xferred)
     Re_Xferred = Re_Xferred + 1
     OutData%DLL_n = IntKiBuf(Int_Xferred)
@@ -17456,7 +17470,7 @@ END IF ! check if allocated
   b = -(u1%LSShftFys - u2%LSShftFys)
   u_out%LSShftFys = u1%LSShftFys + b * ScaleFactor
   b = -(u1%LSShftFzs - u2%LSShftFzs)
-  u_out%LSShftFzs = u1%LSShftFzs + b * ScaleFactor  
+  u_out%LSShftFzs = u1%LSShftFzs + b * ScaleFactor
 IF (ALLOCATED(u_out%fromSC) .AND. ALLOCATED(u1%fromSC)) THEN
   DO i1 = LBOUND(u_out%fromSC,1),UBOUND(u_out%fromSC,1)
     b = -(u1%fromSC(i1) - u2%fromSC(i1))
@@ -17688,7 +17702,7 @@ END IF ! check if allocated
   u_out%LSShftFys = u1%LSShftFys + b  + c * t_out
   b = (t(3)**2*(u1%LSShftFzs - u2%LSShftFzs) + t(2)**2*(-u1%LSShftFzs + u3%LSShftFzs))* scaleFactor
   c = ( (t(2)-t(3))*u1%LSShftFzs + t(3)*u2%LSShftFzs - t(2)*u3%LSShftFzs ) * scaleFactor
-  u_out%LSShftFzs = u1%LSShftFzs + b  + c * t_out  
+  u_out%LSShftFzs = u1%LSShftFzs + b  + c * t_out
 IF (ALLOCATED(u_out%fromSC) .AND. ALLOCATED(u1%fromSC)) THEN
   DO i1 = LBOUND(u_out%fromSC,1),UBOUND(u_out%fromSC,1)
     b = (t(3)**2*(u1%fromSC(i1) - u2%fromSC(i1)) + t(2)**2*(-u1%fromSC(i1) + u3%fromSC(i1)))* scaleFactor

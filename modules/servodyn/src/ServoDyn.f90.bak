@@ -386,7 +386,7 @@ SUBROUTINE SrvD_Init( InitInp, u, p, x, xd, z, OtherState, y, m, Interval, InitO
    u%HorWindV = 0.
    u%YawAngle = 0.
    m%dll_data%ElecPwr_prev = 0.
-   m%dll_data%GenTrq_prev = p%InitGenTrq
+   m%dll_data%GenTrq_prev = 0.
 
       !............................................................................................
       ! Define system output initializations (set up mesh) here:
@@ -4847,7 +4847,6 @@ SUBROUTINE SrvD_SetParameters( InputFileData, p, UnSum, ErrStat, ErrMsg )
    p%VSContrl  = InputFileData%VSContrl
    p%GenModel  = InputFileData%GenModel
    p%GenEff    = InputFileData%GenEff
-   p%InitGenTrq = InputFileData%InitGenTrq
    p%GenTiStr  = InputFileData%GenTiStr
    p%GenTiStp  = InputFileData%GenTiStp
    p%SpdGenOn  = InputFileData%SpdGenOn

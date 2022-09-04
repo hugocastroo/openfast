@@ -370,6 +370,7 @@ typedef	^	ParameterType	ReKi	TEC_V1a	-	-	-	"Source voltage for Thevenin-equivale
 typedef	^	ParameterType	ReKi	TEC_VLL	-	-	-	"Line-to-line RMS voltage for Thevenin-equivalent circuit"
 typedef	^	ParameterType	ReKi	TEC_Xe1	-	-	-	"Thevenin's equivalent stator leakage reactance (ohms)"	ohms
 typedef	^	ParameterType	ReKi	GenEff	-	-	-	"Generator efficiency"
+typedef	^	ParameterType	ReKi	InitGenTrq	-	-	-	"Generator torque at init"	N-m
 typedef	^	ParameterType	ReKi	BlPitchInit	{:}	-	-	"Initial blade pitch angles"	radians
 typedef	^	ParameterType	ReKi	BlPitchF	{:}	-	-	"Final blade pitch"
 typedef	^	ParameterType	ReKi	PitManRat	{:}	-	-	"Pitch rates at which override pitch maneuvers head toward final pitch angles (does not include sign)"	rad/s
@@ -429,7 +430,6 @@ typedef	^	ParameterType	LOGICAL	UseBladedInterface	-	-	-	"Flag that determines i
 typedef	^	ParameterType	LOGICAL	UseLegacyInterface	-	-	-	"Flag that determines if the legacy Bladed interface is (legacy=DISCON with avrSWAP instead of CONTROLLER)"	-
 typedef	^	ParameterType	DLL_Type	DLL_Trgt	-	-	-	"The addresses and names of the Bladed DLL and its procedure"	-
 typedef	^	ParameterType	LOGICAL	DLL_Ramp	-	-	-	"determines if there is a DLL_DT-ramp time delay (true only when DLL_DT /= DT)"	-
-typedef	^	ParameterType	ReKi	InitGenTrq	-	-	-	"Generator torque at init"	N-m
 typedef	^	ParameterType	ReKi	BlAlpha	-	-	-	"parameter for low-pass filter of blade pitch commands from the controller DLL"	-
 typedef	^	ParameterType	IntKi	DLL_n	-	-	-	"number of steps between the controller being called and SrvD being called"	-
 typedef	^	ParameterType	IntKi	avcOUTNAME_LEN	-	-	-	"Length of the avcOUTNAME character array passed to/from the DLL"	-
