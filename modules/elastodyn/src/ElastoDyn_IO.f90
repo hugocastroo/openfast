@@ -1303,6 +1303,7 @@ SUBROUTINE ED_ReadInput( InputFileName, MeshFile, InputFileData, ReadAdmVals, BD
    CHARACTER(1024)                        :: BldFile(MaxBl) !  File that contains the blade information (specified in the primary input file)
    CHARACTER(1024)                        :: FurlFile       !  File that contains the furl information (specified in the primary input file)
    CHARACTER(1024)                        :: TwrFile        !  File that contains the tower information (specified in the primary input file)
+   CHARACTER(1024)                        :: DTLFile        !  File that contains the Train loss information HC
 
       ! initialize values:
 
@@ -1314,7 +1315,7 @@ SUBROUTINE ED_ReadInput( InputFileName, MeshFile, InputFileData, ReadAdmVals, BD
       ! get the primary/platform input-file data
       ! sets UnEcho, BldFile, FurlFile, TwrFile
    
-   CALL ReadPrimaryFile( InputFileName, InputFileData, BldFile, FurlFile, TwrFile, OutFileRoot, UnEcho, ErrStat2, ErrMsg2 )
+   CALL ReadPrimaryFile( InputFileName, InputFileData, BldFile, FurlFile, TwrFile, DTLFile, OutFileRoot, UnEcho, ErrStat2, ErrMsg2 )
       call SetErrStat(ErrStat2,ErrMsg2,ErrStat,ErrMsg,RoutineName)
       if ( ErrStat >= AbortErrLev ) then
          call Cleanup()
@@ -1408,6 +1409,14 @@ SUBROUTINE ED_ReadInput( InputFileName, MeshFile, InputFileData, ReadAdmVals, BD
       ! get the tower input-file data
 
    CALL ReadTowerFile( TwrFile, InputFileData, ReadAdmVals, UnEcho,  ErrStat2, ErrMsg2 )
+      call SetErrStat(ErrStat2,ErrMsg2,ErrStat,ErrMsg,RoutineName)
+      if ( ErrStat >= AbortErrLev ) then
+         call Cleanup()
+         return
+      end if
+
+	  !get the Drive Train loss data HC
+   CALL ReadDTLFile( DTLFile, InputFileData, UnEcho,  ErrStat2, ErrMsg2 )
       call SetErrStat(ErrStat2,ErrMsg2,ErrStat,ErrMsg,RoutineName)
       if ( ErrStat >= AbortErrLev ) then
          call Cleanup()
@@ -3221,11 +3230,142 @@ CONTAINS
       CLOSE( UnIn )
    END SUBROUTINE Cleanup
 END SUBROUTINE ReadTowerFile
+
+!> This routine reads the Drive Train loss file  input. HC
+SUBROUTINE ReadDTLFile( DTLFile, InputFileData, UnEc, ErrStat, ErrMsg )
+!..................................................................................................................................
+
+   IMPLICIT                        NONE
+
+      ! Passed variables:
+   TYPE(ED_InputFile),       INTENT(INOUT)  :: InputFileData                       !< All the data in the ElastoDyn input file
+   INTEGER(IntKi),           INTENT(OUT)    :: ErrStat                             !< Error status
+   INTEGER(IntKi),           INTENT(IN)     :: UnEc                                !< I/O unit for echo file. If present and > 0, write to UnEc
+   CHARACTER(*),             INTENT(OUT)    :: ErrMsg                              !< Error message
+   CHARACTER(*),             INTENT(IN)     :: DTLFile                             !< Name of the DTL input file data
+
+      ! Local variables:
+   REAL(ReKi)                   :: TmpRAry(2)                                     ! Temporary variable to read table from file (up to 2 columns)
+   INTEGER(IntKi)               :: I                                               ! A generic DO index.
+   INTEGER(IntKi)               :: UnIn                                            ! Unit number for reading file
+   INTEGER(IntKi)               :: NInputCols                                      ! Number of columns to be read from the file
+   INTEGER(IntKi)               :: ErrStat2                                        ! Temporary Error status
+   CHARACTER(ErrMsgLen)         :: ErrMsg2                                         ! Temporary Err msg
+   CHARACTER(*), PARAMETER      :: RoutineName = 'ReadDTLFile'
+!-------------------------------------------------------------------------------------------------
+   ErrStat  =  ErrID_None
+   ErrMsg   =  ""
+
+   CALL GetNewUnit( UnIn, ErrStat, ErrMsg )
+   IF ( ErrStat >= AbortErrLev ) RETURN
+
+      ! Open the Drive Train loss input file.
+   CALL OpenFInpFile ( UnIn, DTLFile, ErrStat2, ErrMsg2 )
+      CALL SetErrStat( ErrStat2, ErrMsg2, ErrStat, ErrMsg, RoutineName )
+      IF ( ErrStat >= AbortErrLev ) THEN
+         CALL Cleanup()
+         RETURN
+      END IF
+
+      ! Add a separator to the echo file if appropriate.
+   IF ( UnEc > 0 )  WRITE (UnEc,'(//,A,/)')  'Drive train loss data from file "'//TRIM( DTLFile )//'":'
+
+   !  -------------- FILE HEADER ---------------------------------------------------
+   CALL ReadCom ( UnIn, DTLFile, 'unused DTL file header line 1', ErrStat2, ErrMsg2, UnEc )
+      CALL SetErrStat( ErrStat2, ErrMsg2, ErrStat, ErrMsg, RoutineName )
+      IF ( ErrStat >= AbortErrLev ) THEN
+         CALL Cleanup()
+         RETURN
+      END IF
+
+   CALL ReadCom ( UnIn, DTLFile, 'unused tower file header line 2', ErrStat2, ErrMsg2, UnEc )
+      CALL SetErrStat( ErrStat2, ErrMsg2, ErrStat, ErrMsg, RoutineName )
+      IF ( ErrStat >= AbortErrLev ) THEN
+         CALL Cleanup()
+         RETURN
+      END IF
+
+   !  -------------- DRIVE TRAIN LOSS PARAMETERS ---------------------------------------------
+   CALL ReadCom ( UnIn, DTLFile, 'heading for drive train loss parameters', ErrStat2, ErrMsg2, UnEc )
+      CALL SetErrStat( ErrStat2, ErrMsg2, ErrStat, ErrMsg, RoutineName )
+      IF ( ErrStat >= AbortErrLev ) THEN
+         CALL Cleanup()
+         RETURN
+      END IF
+
+      ! DTLInpN - Number of tower input stations.
+   CALL ReadVar ( UnIn, DTLFile, InputFileData%DTLInpN, 'DTLInpN', 'Number of inputs to specify losses', ErrStat2, ErrMsg2, UnEc )
+      CALL SetErrStat( ErrStat2, ErrMsg2, ErrStat, ErrMsg, RoutineName )
+      IF ( ErrStat >= AbortErrLev ) THEN
+         CALL Cleanup()
+         RETURN
+      END IF
+	  
+      ! Allocate the input arrays based on this DTLInpN input
+   CALL Alloc_DriveTrainLossProperties( InputFileData, ErrStat, ErrMsg )
+      CALL SetErrStat( ErrStat2, ErrMsg2, ErrStat, ErrMsg, RoutineName )
+      IF ( ErrStat >= AbortErrLev ) THEN
+         CALL Cleanup()
+         RETURN
+      END IF
+
+   !  -------------- DISTRIBUTED TOWER PROPERTIES ---------------------------------
+
+      ! Skip the comment lines.
+   CALL ReadCom ( UnIn, DTLFile, 'heading for drive train loss parameters', ErrStat2, ErrMsg2, UnEc  )
+      CALL SetErrStat( ErrStat2, ErrMsg2, ErrStat, ErrMsg, RoutineName )
+      IF ( ErrStat >= AbortErrLev ) THEN
+         CALL Cleanup()
+         RETURN
+      END IF
+
+   CALL ReadCom ( UnIn, DTLFile, 'drive train loss parameter names', ErrStat2, ErrMsg2, UnEc  )
+      CALL SetErrStat( ErrStat2, ErrMsg2, ErrStat, ErrMsg, RoutineName )
+      IF ( ErrStat >= AbortErrLev ) THEN
+         CALL Cleanup()
+         RETURN
+      END IF
+
+   CALL ReadCom ( UnIn, DTLFile, 'drive train loss parameter units', ErrStat2, ErrMsg2, UnEc  )
+      CALL SetErrStat( ErrStat2, ErrMsg2, ErrStat, ErrMsg, RoutineName )
+      IF ( ErrStat >= AbortErrLev ) THEN
+         CALL Cleanup()
+         RETURN
+      END IF
+
+      NInputCols = 2
+
+   DO I=1,InputFileData%DTLInpN
+
+      CALL ReadAry( UnIn, DTLFile, TmpRAry, NInputCols, 'Line'//TRIM(Num2LStr(I)), 'drive train loss table', &
+                    ErrStat2, ErrMsg2, UnEc )
+         CALL SetErrStat( ErrStat2, ErrMsg2, ErrStat, ErrMsg, RoutineName )
+         IF ( ErrStat >= AbortErrLev ) THEN
+            CALL Cleanup()
+            RETURN
+         END IF
+
+      InputFileData%DTLInpTrq(I) = TmpRAry(1)
+      InputFileData%DTLTrq(I) = TmpRAry(2)
+
+   END DO ! I
+
+!-------------------------------------------------------------------------------------------------
+      ! Close the DTL file.
+   CALL Cleanup()
+   
+   RETURN
+CONTAINS
+   SUBROUTINE Cleanup()
+      CLOSE( UnIn )
+   END SUBROUTINE Cleanup
+END SUBROUTINE ReadDTLFile
+
 !----------------------------------------------------------------------------------------------------------------------------------
 !> This routine reads in the primary ElastoDyn input file and places the values it reads in the InputFileData structure.
 !!  It opens an echo file if requested and returns the (still-open) echo file to the calling routine.
 !!  It also returns the names of the BldFile, FurlFile, and TrwFile for further reading of inputs.
-SUBROUTINE ReadPrimaryFile( InputFile, InputFileData, BldFile, FurlFile, TwrFile, OutFileRoot, UnEc, ErrStat, ErrMsg )
+SUBROUTINE ReadPrimaryFile( InputFile, InputFileData, BldFile, FurlFile, TwrFile, DTLFile, OutFileRoot, UnEc, ErrStat, ErrMsg )
 !..................................................................................................................................
 
       ! Passed variables
@@ -3235,6 +3375,7 @@ SUBROUTINE ReadPrimaryFile( InputFile, InputFileData, BldFile, FurlFile, TwrFile
    CHARACTER(*),       INTENT(IN)     :: InputFile                           !< Name of the file containing the primary input data
    CHARACTER(*),       INTENT(OUT)    :: ErrMsg                              !< Error message
    CHARACTER(*),       INTENT(OUT)    :: TwrFile                             !< name of the file containing tower inputs
+   CHARACTER(*),       INTENT(OUT)    :: DTLFile                             !< name of the file containing tower inputs HC
    CHARACTER(*),       INTENT(OUT)    :: FurlFile                            !< name of the file containing furling inputs
    CHARACTER(*),       INTENT(OUT)    :: BldFile(MaxBl)                      !< name of the files containing blade inputs
    CHARACTER(*),       INTENT(IN)     :: OutFileRoot                         !< The rootname of the echo file, possibly opened in this routine
@@ -4183,6 +4324,31 @@ SUBROUTINE ReadPrimaryFile( InputFile, InputFileData, BldFile, FurlFile, TwrFile
          RETURN
       END IF
    IF ( PathIsRelative( TwrFile ) ) TwrFile = TRIM(PriPath)//TRIM(TwrFile)
+   
+      !---------------------- DRIVE TRAIN LOSSES------------------------------------HC
+      CALL ReadCom( UnIn, InputFile, 'Section Header: Drive Train losses', ErrStat2, ErrMsg2, UnEc )
+      CALL SetErrStat( ErrStat2, ErrMsg2, ErrStat, ErrMsg, RoutineName )
+      IF ( ErrStat >= AbortErrLev ) THEN
+         CALL Cleanup()
+         RETURN
+      END IF
+
+      ! Drive Train losses - Use Additional Drive Train losses parameters? (flag):
+   CALL ReadVar( UnIn, InputFile, InputFileData%DTLoss, "DTLoss", "Use Additional DTL parameters? (flag)", ErrStat2, ErrMsg2, UnEc)
+      CALL SetErrStat( ErrStat2, ErrMsg2, ErrStat, ErrMsg, RoutineName )
+      IF ( ErrStat >= AbortErrLev ) THEN
+         CALL Cleanup()
+         RETURN
+      END IF
+
+      ! DTLFile - Name of the file containing Drive Train losses properties:
+   CALL ReadVar ( UnIn, InputFile, DTLFile, 'DTLFile', 'Name of the file containing Drive Train losses info', ErrStat2, ErrMsg2, UnEc )
+      CALL SetErrStat( ErrStat2, ErrMsg2, ErrStat, ErrMsg, RoutineName )
+      IF ( ErrStat >= AbortErrLev ) THEN
+         CALL Cleanup()
+         RETURN
+      END IF
+   IF ( PathIsRelative( DTLFile ) ) DTLFile = TRIM(PriPath)//TRIM(DTLFile)
 
    !---------------------- OUTPUT --------------------------------------------------
    CALL ReadCom( UnIn, InputFile, 'Section Header: Output', ErrStat2, ErrMsg2, UnEc )
@@ -4538,6 +4704,28 @@ SUBROUTINE Alloc_TowerInputProperties( InputFileData, AllocAdams, ErrStat, ErrMs
 
 
 END SUBROUTINE Alloc_TowerInputProperties
+!> This routine allocates arrays for the drive train loss properties from the input file HC
+SUBROUTINE Alloc_DriveTrainLossProperties( InputFileData, ErrStat, ErrMsg )
+!..................................................................................................................................
+
+   TYPE(ED_InputFile),       INTENT(INOUT)  :: InputFileData      !< All the data in the ElastoDyn input file
+   INTEGER(IntKi),           INTENT(OUT)    :: ErrStat            !< Error status
+   CHARACTER(*),             INTENT(OUT)    :: ErrMsg             !< Error message
+
+
+   IF ( InputFileData%DTLInpN < 2 )  THEN
+      ErrStat = ErrID_Fatal
+      ErrMsg = ' Error allocating arrays for drive train loss properties: DTLInpN must be at least 2.'
+      RETURN
+   END IF
+
+      ! Allocate the arrays.
+   CALL AllocAry  ( InputFileData%DTLInpTrq,   InputFileData%DTLInpN, 'DTLInpTrq'   , ErrStat, ErrMsg )
+   IF ( ErrStat /= ErrID_None ) RETURN
+   CALL AllocAry  ( InputFileData%DTLTrq,  InputFileData%DTLInpN, 'DTLTrq'  , ErrStat, ErrMsg )
+   IF ( ErrStat /= ErrID_None ) RETURN
+
+END SUBROUTINE Alloc_DriveTrainLossProperties
 !----------------------------------------------------------------------------------------------------------------------------------
 !> This routine checks the blade file input data for errors.
 SUBROUTINE ValidateBladeData ( BladeKInputFileData, ErrStat, ErrMsg )

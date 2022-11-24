@@ -176,6 +176,7 @@ typedef	^	ED_InputFile	ReKi	DTTorSpr	-	-	-	"Drivetrain torsional spring"	N-m/rad
 typedef	^	ED_InputFile	ReKi	DTTorDmp	-	-	-	"Drivetrain torsional damper"	N-m/(rad/s)
 typedef	^	ED_InputFile	LOGICAL	Furling	-	-	-	"Use Additional Furling parameters?"	-
 typedef	^	ED_InputFile	IntKi	TwrNodes	-	-	-	"Number of tower nodes used in the analysis"	-
+typedef	^	ED_InputFile	LOGICAL	DTLoss	-	-	-	"Use Additional DTL parameters?"	-
 typedef	^	ED_InputFile	LOGICAL	SumPrint	-	-	-	"Print summary data to <RootName>.sum"	-
 typedef	^	ED_InputFile	IntKi	OutFile	-	-	-	"Switch to determine where output will be placed: (1: in module output file only; 2: in glue code output file only; 3: both)"	-
 #typedef	^	ED_InputFile	IntKi	OutFileFmt	-	-	-	"Format for module tabular (time-marching) output: {1: text file [<RootName>.out], 2: binary file [<RootName>.outb], 3: both}"	-
@@ -204,6 +205,12 @@ typedef	^	ED_InputFile	ReKi	TwFAM1Sh	{:}	-	-	"Tower fore-aft mode-1 shape coeffi
 typedef	^	ED_InputFile	ReKi	TwFAM2Sh	{:}	-	-	"Tower fore-aft mode-2 shape coefficients"	-
 typedef	^	ED_InputFile	ReKi	TwSSM1Sh	{:}	-	-	"Tower side-to-side mode-1 shape coefficients"	-
 typedef	^	ED_InputFile	ReKi	TwSSM2Sh	{:}	-	-	"Tower side-to-side mode-2 shape coefficients"	-
+
+# ..... Tower Input file data ...........................................................................................................
+typedef	^	ED_InputFile	IntKi	DTLInpN	-	-	-	"Number of inputs to specify losses"	-
+typedef	^	ED_InputFile	ReKi	DTLInpTrq	{:}	-	-	"Drive train input torque"	kNm
+typedef	^	ED_InputFile	ReKi	DTLTrq	{:}	-	-	"Drive train loss torque "	kNm
+
 # ..... Tower Input file data (ADAMS only) ...........................................................................................................
 typedef	^	ED_InputFile	ReKi	TwGJStif	{:}	-	-	"Tower torsional stiffness for a given input station"	Nm^2
 typedef	^	ED_InputFile	ReKi	TwEAStif	{:}	-	-	"Tower extensional stiffness for a given input station"	N
