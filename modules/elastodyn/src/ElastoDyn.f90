@@ -939,42 +939,40 @@ END IF
 
       ! Platform Motions:
 
-   m%AllOuts( PtfmTDxt) =  DOT_PRODUCT(       m%RtHS%rZ, m%CoordSys%a1 )
-   m%AllOuts( PtfmTDyt) = -DOT_PRODUCT(       m%RtHS%rZ, m%CoordSys%a3 )
-   m%AllOuts( PtfmTDzt) =  DOT_PRODUCT(       m%RtHS%rZ, m%CoordSys%a2 )
-   m%AllOuts( PtfmTDxi) = x%QT  (DOF_Sg )
-   m%AllOuts( PtfmTDyi) = x%QT  (DOF_Sw )
-   m%AllOuts( PtfmTDzi) = x%QT  (DOF_Hv )
-   m%AllOuts( PtfmTVxt) =  DOT_PRODUCT( m%RtHS%LinVelEZ, m%CoordSys%a1 )
-   m%AllOuts( PtfmTVyt) = -DOT_PRODUCT( m%RtHS%LinVelEZ, m%CoordSys%a3 )
-   m%AllOuts( PtfmTVzt) =  DOT_PRODUCT( m%RtHS%LinVelEZ, m%CoordSys%a2 )
-   m%AllOuts( PtfmTVxi) = x%QDT (DOF_Sg )
-   m%AllOuts( PtfmTVyi) = x%QDT (DOF_Sw )
-   m%AllOuts( PtfmTVzi) = x%QDT (DOF_Hv )
-   m%AllOuts( PtfmTAxt) =  DOT_PRODUCT(                 LinAccEZ, m%CoordSys%a1 )
-   m%AllOuts( PtfmTAyt) = -DOT_PRODUCT(                 LinAccEZ, m%CoordSys%a3 )
-   m%AllOuts( PtfmTAzt) =  DOT_PRODUCT(                 LinAccEZ, m%CoordSys%a2 )
-   m%AllOuts( PtfmTAxi) = m%QD2T(DOF_Sg  )
-   m%AllOuts( PtfmTAyi) = m%QD2T(DOF_Sw  )
-   m%AllOuts( PtfmTAzi) = m%QD2T(DOF_Hv  )
-   m%AllOuts( PtfmRDxi) = x%QT  (DOF_R )*R2D
-   m%AllOuts( PtfmRDyi) = x%QT  (DOF_P )*R2D
-   m%AllOuts( PtfmRDzi) = x%QT  (DOF_Y )*R2D
-   m%AllOuts( PtfmRVxt) =  DOT_PRODUCT( m%RtHS%AngVelEX, m%CoordSys%a1 )*R2D
-   m%AllOuts( PtfmRVyt) = -DOT_PRODUCT( m%RtHS%AngVelEX, m%CoordSys%a3 )*R2D
-   m%AllOuts( PtfmRVzt) =  DOT_PRODUCT( m%RtHS%AngVelEX, m%CoordSys%a2 )*R2D
-   m%AllOuts( PtfmRVxi) = x%QDT (DOF_R )*R2D
-   m%AllOuts( PtfmRVyi) = x%QDT (DOF_P )*R2D
-   m%AllOuts( PtfmRVzi) = x%QDT (DOF_Y )*R2D
-   m%AllOuts( PtfmRAxt) =  DOT_PRODUCT(                 AngAccEX, m%CoordSys%a1 )*R2D
-   m%AllOuts( PtfmRAyt) = -DOT_PRODUCT(                 AngAccEX, m%CoordSys%a3 )*R2D
-   m%AllOuts( PtfmRAzt) =  DOT_PRODUCT(                 AngAccEX, m%CoordSys%a2 )*R2D
-   m%AllOuts( PtfmRAxi) = m%QD2T(DOF_R )*R2D
-   m%AllOuts( PtfmRAyi) = m%QD2T(DOF_P )*R2D
-   m%AllOuts( PtfmRAzi) = m%QD2T(DOF_Y )*R2D
-
-
-
+		m%AllOuts( PtfmTDxt) =  DOT_PRODUCT(       m%RtHS%rZ, m%CoordSys%a1 )
+		m%AllOuts( PtfmTDyt) = -DOT_PRODUCT(       m%RtHS%rZ, m%CoordSys%a3 )
+		m%AllOuts( PtfmTDzt) =  DOT_PRODUCT(       m%RtHS%rZ, m%CoordSys%a2 )
+		m%AllOuts( PtfmTDxi) = x%QT  (DOF_Sg )
+		m%AllOuts( PtfmTDyi) = x%QT  (DOF_Sw )
+		m%AllOuts( PtfmTDzi) = x%QT  (DOF_Hv )
+		m%AllOuts( PtfmTVxt) =  DOT_PRODUCT( m%RtHS%LinVelEZ, m%CoordSys%a1 )
+		m%AllOuts( PtfmTVyt) = -DOT_PRODUCT( m%RtHS%LinVelEZ, m%CoordSys%a3 )
+		m%AllOuts( PtfmTVzt) =  DOT_PRODUCT( m%RtHS%LinVelEZ, m%CoordSys%a2 )
+		m%AllOuts( PtfmTVxi) = x%QDT (DOF_Sg )
+		m%AllOuts( PtfmTVyi) = x%QDT (DOF_Sw )
+		m%AllOuts( PtfmTVzi) = x%QDT (DOF_Hv )
+		m%AllOuts( PtfmTAxt) =  DOT_PRODUCT(                 LinAccEZ, m%CoordSys%a1 )
+		m%AllOuts( PtfmTAyt) = -DOT_PRODUCT(                 LinAccEZ, m%CoordSys%a3 )
+		m%AllOuts( PtfmTAzt) =  DOT_PRODUCT(                 LinAccEZ, m%CoordSys%a2 )
+		m%AllOuts( PtfmTAxi) = m%QD2T(DOF_Sg  )
+		m%AllOuts( PtfmTAyi) = m%QD2T(DOF_Sw  )
+		m%AllOuts( PtfmTAzi) = m%QD2T(DOF_Hv  )
+		m%AllOuts( PtfmRDxi) = x%QT  (DOF_R )*R2D
+		m%AllOuts( PtfmRDyi) = x%QT  (DOF_P )*R2D
+		m%AllOuts( PtfmRDzi) = x%QT  (DOF_Y )*R2D
+		m%AllOuts( PtfmRVxt) =  DOT_PRODUCT( m%RtHS%AngVelEX, m%CoordSys%a1 )*R2D
+		m%AllOuts( PtfmRVyt) = -DOT_PRODUCT( m%RtHS%AngVelEX, m%CoordSys%a3 )*R2D
+		m%AllOuts( PtfmRVzt) =  DOT_PRODUCT( m%RtHS%AngVelEX, m%CoordSys%a2 )*R2D
+		m%AllOuts( PtfmRVxi) = x%QDT (DOF_R )*R2D
+		m%AllOuts( PtfmRVyi) = x%QDT (DOF_P )*R2D
+		m%AllOuts( PtfmRVzi) = x%QDT (DOF_Y )*R2D
+		m%AllOuts( PtfmRAxt) =  DOT_PRODUCT(                 AngAccEX, m%CoordSys%a1 )*R2D
+		m%AllOuts( PtfmRAyt) = -DOT_PRODUCT(                 AngAccEX, m%CoordSys%a3 )*R2D
+		m%AllOuts( PtfmRAzt) =  DOT_PRODUCT(                 AngAccEX, m%CoordSys%a2 )*R2D
+		m%AllOuts( PtfmRAxi) = m%QD2T(DOF_R )*R2D
+		m%AllOuts( PtfmRAyi) = m%QD2T(DOF_P )*R2D
+		m%AllOuts( PtfmRAzi) = m%QD2T(DOF_Y )*R2D
+			
       ! Blade Root Loads:
 
    DO K=1,p%NumBl
@@ -1850,7 +1848,6 @@ SUBROUTINE ED_CalcContStateDeriv( t, u, p, x, xd, z, OtherState, m, dxdt, ErrSta
 
    ErrStat = ErrID_None
    ErrMsg  = ""
-   
    !OtherState%HSSBrTrqC = SIGN( u%HSSBrTrqC, x%QDT(DOF_GeAz) ) !need correct value of x%QDT(DOF_GeAz) here
 
          ! Compute the first time derivatives of the continuous states here:
@@ -1886,7 +1883,7 @@ SUBROUTINE ED_CalcContStateDeriv( t, u, p, x, xd, z, OtherState, m, dxdt, ErrSta
    !bjj: note m%RtHS%GBoxEffFac needed in OtherState only to fix HSSBrTrq (and used in FillAugMat)
    m%RtHS%GBoxEffFac  = p%GBoxEff**OtherState%SgnPrvLSTQ      ! = GBoxEff if SgnPrvLSTQ = 1 OR 1/GBoxEff if SgnPrvLSTQ = -1
    
-   CALL FillAugMat( p, x, m%CoordSys, u, OtherState%HSSBrTrq, m%RtHS, m%AugMat )
+   CALL FillAugMat( p, x, m%CoordSys, u, OtherState%HSSBrTrq, m%RtHS, m%AugMat ,m) !changed function, now is passing algo m matrix for possible calculations HC
    
 
    ! Invert the matrix to solve for the accelerations. The accelerations are returned by Gauss() in the first NActvDOF elements
@@ -1933,7 +1930,7 @@ END IF
    DO I = 1,p%DOFs%NActvDOF ! Loop through all active (enabled) DOFs
       dxdt%QDT(p%DOFs%SrtPS(I)) = m%SolnVec(I)    ! dxdt%QDT = m%QD2T
    ENDDO             ! I - All active (enabled) DOFs
-
+   
    m%QD2T = dxdt%QDT
       
    
@@ -3292,6 +3289,11 @@ SUBROUTINE SetTowerParameters( p, InputFileData, ErrStat, ErrMsg  )
    !...............................................................................................................................
 
    p%TTopNode = p%TwrNodes + 1
+   
+   !Set parameters for the Drive Train Loss calculation HC
+   p%DTLInpTrq = InputFileData%DTLInpTrq
+   p%DTLTrq = InputFileData%DTLTrq
+   p%DTLInpN = InputFileData%DTLInpN
 
    !   ! these are for HydroDyn ?
    !p%DiamT(:) = InputFileData%TwrDiam
@@ -6651,7 +6653,7 @@ FUNCTION SignLSSTrq( p, m )
       !   low-speed shaft torque and take the SIGN of the result:
 
    SignLSSTrq = NINT( SIGN( 1.0_R8Ki, DOT_PRODUCT( MomLPRot, m%CoordSys%e1 ) ) )
-
+   
 END FUNCTION SignLSSTrq
 !----------------------------------------------------------------------------------------------------------------------------------
 !> This routine is used to calculate the positions stored in other states that are used in both the
@@ -8137,7 +8139,7 @@ DO K = 1,p%NumBl ! Loop through all blades
 END SUBROUTINE CalculateForcesMoments
 !----------------------------------------------------------------------------------------------------------------------------------
 !> This routine is used to populate the AugMat matrix for RtHS (CalcContStateDeriv)
-SUBROUTINE FillAugMat( p, x, CoordSys, u, HSSBrTrq, RtHSdat, AugMat )
+SUBROUTINE FillAugMat( p, x, CoordSys, u, HSSBrTrq, RtHSdat, AugMat, m) !Changed matrix to pass m matrix HC
 !..................................................................................................................................
 
       ! Passed variables
@@ -8148,6 +8150,7 @@ SUBROUTINE FillAugMat( p, x, CoordSys, u, HSSBrTrq, RtHSdat, AugMat )
    TYPE(ED_RtHndSide),           INTENT(IN   )  :: RtHSdat     !< data from the RtHndSid module (contains positions to be set)
    REAL(ReKi),                   INTENT(IN )    :: HSSBrTrq    !<  SIGN( u%HSSBrTrqC, x%QDT(DOF_GeAz) ) or corrected value from FixHSS
    REAL(R8Ki),                   INTENT(OUT)    :: AugMat(:,:) !< the return matrix 
+   TYPE(ED_MiscVarType),         INTENT(INOUT)  :: m           !< Misc variables for optimization (not copied in glue code) HC
    
       ! Local variables
    REAL(ReKi)                   :: TmpVec    (3)                                   ! A temporary vector used in various computations.
@@ -8155,6 +8158,11 @@ SUBROUTINE FillAugMat( p, x, CoordSys, u, HSSBrTrq, RtHSdat, AugMat )
    REAL(ReKi)                   :: TmpVec3   (3)                                   ! A temporary vector used in various computations.
    REAL(ReKi)                   :: GBoxTrq                                         ! Gearbox torque on the LSS side in N-m (calculated from inputs and parameters).
    REAL(ReKi)                   :: GBoxEffFac2                                     ! A second gearbox efficiency factor = ( 1 / GBoxEff^SgnPrvLSTQ - 1 )
+   !Variables for the drive train mechanical loss HC
+   REAL(ReKi)					:: LSSTrqLoss										!"Low Speed Shaft torque loss" N-m HC
+   REAL(ReKI)					:: CurrRotTrq										!Current Torque for comparison in Look up table N-m HC
+   REAL(ReKI)					:: TMomLPRot(3)										!
+   REAL(ReKI)					:: AuxMomLPRot(3)									!Auxiliar variable for calculations HC
 
    INTEGER(IntKi)               :: I                                               ! Loops through some or all of the DOFs
    INTEGER(IntKi)               :: J                                               ! Counter for elements
@@ -8166,6 +8174,12 @@ SUBROUTINE FillAugMat( p, x, CoordSys, u, HSSBrTrq, RtHSdat, AugMat )
       
    AugMat      = 0.0
    GBoxTrq    = ( u%GenTrq + HSSBrTrq )*ABS(p%GBRatio) ! bjj: do we use HSSBrTrqC or HSSBrTrq?
+   !Initialize the extra values for the drive train mechanical loss calculation HC
+   LSSTrqLoss = 0.0
+   CurrRotTrq = 0.0
+   TMomLPRot = 0.0
+   AuxMomLPRot = 0.0
+   m%LSSTrqLoss = 0.0
    
    DO K = 1,p%NumBl ! Loop through all blades
    
@@ -8493,11 +8507,31 @@ SUBROUTINE FillAugMat( p, x, CoordSys, u, HSSBrTrq, RtHSdat, AugMat )
       !   generator inertia-contribution to the mass matrix and forcing function.
       !   Thus, add these in as well:
 
+		!Drive Train Loss calculation HC
+		DO I = 1,p%DOFs%NActvDOF ! Loop through all active (enabled) DOFs HC
+			AuxMomLPRot = AuxMomLPRot + m%RtHS%PMomLPRot  (:,p%DOFs%SrtPS(I)  )*m%QD2T(p%DOFs%SrtPS(I))
+		ENDDO
 
-         AugMat(DOF_GeAz,       DOF_GeAz) = AugMat(DOF_GeAz,DOF_GeAz)                                    &
+		TMomLPRot = m%RtHS%MomLPRott + AuxMomLPRot 
+		CurrRotTrq = DOT_PRODUCT(TMomLPRot, m%CoordSys%e1) 			!Calculation of the Current torque HC
+
+		IF(CurrRotTrq .le. p%DTLInpTrq(1)) THEN						!If CurrRotTrq is smaller than the first value in the Look up table, set the loss to the minimum value HC
+			LSSTrqLoss = (p%DTLTrq(1))
+		ELSEIF (CurrRotTrq .ge. p%DTLInpTrq(p%DTLInpN)) THEN 		! IF CurrRotTrq is greater that the biggest values in the look up table, set the loss to the biggest value HC
+			LSSTrqLoss = (p%DTLTrq(p%DTLInpN))
+		ELSE														!Find the two two values in the look up table to make the interpolation
+			DO I = 1,p%DTLInpN
+				IF((p%DTLInpTrq(I) .le. CurrRotTrq)  .AND. (p%DTLInpTrq(I+1) .ge. CurrRotTrq)) THEN
+					LSSTrqLoss = ((p%DTLTrq(I)) + (((p%DTLTrq(I+1))-(p%DTLTrq(I)))*(((CurrRotTrq-(p%DTLInpTrq(I)))/((p%DTLInpTrq(I+1))-(p%DTLInpTrq(I))))))) !Loss Torque calculation using the CurrRotTrq and the look up table values
+				END IF
+			ENDDO
+		ENDIF
+		m%LSSTrqLoss = LSSTrqLoss !Save loss torque in the m matrix for possible visualization and debug purposes
+		 
+		 AugMat(DOF_GeAz,       DOF_GeAz) = AugMat(DOF_GeAz,DOF_GeAz)                                    &
                                             +  DOT_PRODUCT( RtHSdat%PAngVelEG(DOF_GeAz,0,:), TmpVec                )             ! [C(q,t)]G
-         AugMat(DOF_GeAz,         p%NAug) = AugMat(DOF_GeAz,  p%NAug)                                    &
-                                            -  DOT_PRODUCT( RtHSdat%AngAccEGt              , TmpVec                )             ! {-f(qd,q,t)}G
+         AugMat(DOF_GeAz,         p%NAug) = (AugMat(DOF_GeAz,  p%NAug)                                    &
+                                            -  DOT_PRODUCT( RtHSdat%AngAccEGt              , TmpVec                )) - LSSTrqLoss   !  {-f(qd,q,t)}G extract the LSSTrqLoss HC
 
 
    ENDIF
@@ -8552,12 +8586,12 @@ SUBROUTINE FillAugMat( p, x, CoordSys, u, HSSBrTrq, RtHSdat, AugMat )
 
       AugMat(DOF_GeAz,p%DOFs%SrtPS(I)) = AugMat(DOF_GeAz,p%DOFs%SrtPS(I)) &                                          ! NOTE: TmpVec is still = ( generator inertia dyadic ) Dot ( partial angular velocity of G in E for DOF_GeAz ) in the following equation
                                 + GBoxEffFac2*  DOT_PRODUCT( RtHSdat%PAngVelEG(p%DOFs%SrtPS(I),0,:), TmpVec )        ! [C(q,t)]GBFric
-
+	
    ENDDO             ! I - All active (enabled) DOFs
 
    AugMat(   DOF_GeAz,    p%NAug) = AugMat(DOF_GeAz,    p%NAug) &                                                    ! NOTE: TmpVec is still = ( generator inertia dyadic ) Dot ( partial angular velocity of G in E for DOF_GeAz ) in the following equation
-                                - GBoxEffFac2*( DOT_PRODUCT( RtHSdat%AngAccEGt              , TmpVec ) + GBoxTrq )   ! {-f(qd,q,t)}GBFric
-
+                                - GBoxEffFac2*( DOT_PRODUCT( RtHSdat%AngAccEGt              , TmpVec ) + GBoxTrq )  ! {-f(qd,q,t)}GBFric
+   
    
    
    

@@ -54,3 +54,6 @@ vs-build/
 varcache
 *.slxc
 
+*.bak
+reg_tests*/
+
