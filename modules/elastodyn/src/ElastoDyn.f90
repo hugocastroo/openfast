@@ -973,6 +973,8 @@ END IF
 		m%AllOuts( PtfmRAyi) = m%QD2T(DOF_P )*R2D
 		m%AllOuts( PtfmRAzi) = m%QD2T(DOF_Y )*R2D
 			
+
+
       ! Blade Root Loads:
 
    DO K=1,p%NumBl
@@ -1848,6 +1850,7 @@ SUBROUTINE ED_CalcContStateDeriv( t, u, p, x, xd, z, OtherState, m, dxdt, ErrSta
 
    ErrStat = ErrID_None
    ErrMsg  = ""
+   
    !OtherState%HSSBrTrqC = SIGN( u%HSSBrTrqC, x%QDT(DOF_GeAz) ) !need correct value of x%QDT(DOF_GeAz) here
 
          ! Compute the first time derivatives of the continuous states here:
@@ -3291,9 +3294,11 @@ SUBROUTINE SetTowerParameters( p, InputFileData, ErrStat, ErrMsg  )
    p%TTopNode = p%TwrNodes + 1
    
    !Set parameters for the Drive Train Loss calculation HC
-   p%DTLInpTrq = InputFileData%DTLInpTrq
-   p%DTLTrq = InputFileData%DTLTrq
-   p%DTLInpN = InputFileData%DTLInpN
+   p%DTLoss = .false. 								!Set a false value for the FLAG
+   p%DTLInpTrq = InputFileData%DTLInpTrq 			!Set the value for the numer of inputs in the look up table
+   p%DTLTrq = InputFileData%DTLTrq					!Set the array for the rotor torque loss
+   p%DTLInpN = InputFileData%DTLInpN				!Set the array for the input torque for the loss calculation
+   p%DTLoss = InputFileData%DTLoss					!Set the FLAG for the Drive train loss calculation
 
    !   ! these are for HydroDyn ?
    !p%DiamT(:) = InputFileData%TwrDiam
@@ -8507,27 +8512,28 @@ SUBROUTINE FillAugMat( p, x, CoordSys, u, HSSBrTrq, RtHSdat, AugMat, m) !Changed
       !   generator inertia-contribution to the mass matrix and forcing function.
       !   Thus, add these in as well:
 
-		!Drive Train Loss calculation HC
-		DO I = 1,p%DOFs%NActvDOF ! Loop through all active (enabled) DOFs HC
-			AuxMomLPRot = AuxMomLPRot + m%RtHS%PMomLPRot  (:,p%DOFs%SrtPS(I)  )*m%QD2T(p%DOFs%SrtPS(I))
-		ENDDO
-
-		TMomLPRot = m%RtHS%MomLPRott + AuxMomLPRot 
-		CurrRotTrq = DOT_PRODUCT(TMomLPRot, m%CoordSys%e1) 			!Calculation of the Current torque HC
-
-		IF(CurrRotTrq .le. p%DTLInpTrq(1)) THEN						!If CurrRotTrq is smaller than the first value in the Look up table, set the loss to the minimum value HC
-			LSSTrqLoss = (p%DTLTrq(1))
-		ELSEIF (CurrRotTrq .ge. p%DTLInpTrq(p%DTLInpN)) THEN 		! IF CurrRotTrq is greater that the biggest values in the look up table, set the loss to the biggest value HC
-			LSSTrqLoss = (p%DTLTrq(p%DTLInpN))
-		ELSE														!Find the two two values in the look up table to make the interpolation
-			DO I = 1,p%DTLInpN
-				IF((p%DTLInpTrq(I) .le. CurrRotTrq)  .AND. (p%DTLInpTrq(I+1) .ge. CurrRotTrq)) THEN
-					LSSTrqLoss = ((p%DTLTrq(I)) + (((p%DTLTrq(I+1))-(p%DTLTrq(I)))*(((CurrRotTrq-(p%DTLInpTrq(I)))/((p%DTLInpTrq(I+1))-(p%DTLInpTrq(I))))))) !Loss Torque calculation using the CurrRotTrq and the look up table values
-				END IF
+		!Drive Train Loss calculation If the flag DTLoss in the ElastoDyn file is set TRUE HC
+		IF (p%DTLoss) THEN
+			DO I = 1,p%DOFs%NActvDOF ! Loop through all active (enabled) DOFs HC
+				AuxMomLPRot = AuxMomLPRot + m%RtHS%PMomLPRot  (:,p%DOFs%SrtPS(I)  )*m%QD2T(p%DOFs%SrtPS(I))
 			ENDDO
+
+			TMomLPRot = m%RtHS%MomLPRott + AuxMomLPRot 
+			CurrRotTrq = DOT_PRODUCT(TMomLPRot, m%CoordSys%e1) 			!Calculation of the Current torque HC
+
+			IF(CurrRotTrq .le. p%DTLInpTrq(1)) THEN						!If CurrRotTrq is smaller than the first value in the Look up table, set the loss to the minimum value HC
+				LSSTrqLoss = (p%DTLTrq(1))
+			ELSEIF (CurrRotTrq .ge. p%DTLInpTrq(p%DTLInpN)) THEN 		! IF CurrRotTrq is greater that the biggest values in the look up table, set the loss to the biggest value HC
+				LSSTrqLoss = (p%DTLTrq(p%DTLInpN))
+			ELSE														!Find the two two values in the look up table to make the interpolation
+				DO I = 1,p%DTLInpN
+					IF((p%DTLInpTrq(I) .le. CurrRotTrq)  .AND. (p%DTLInpTrq(I+1) .ge. CurrRotTrq)) THEN
+						LSSTrqLoss = ((p%DTLTrq(I)) + (((p%DTLTrq(I+1))-(p%DTLTrq(I)))*(((CurrRotTrq-(p%DTLInpTrq(I)))/((p%DTLInpTrq(I+1))-(p%DTLInpTrq(I))))))) !Loss Torque calculation using the CurrRotTrq and the look up table values
+					END IF
+				ENDDO
+			ENDIF
+			m%LSSTrqLoss = LSSTrqLoss !Save loss torque in the m matrix for possible visualization and debug purposes
 		ENDIF
-		m%LSSTrqLoss = LSSTrqLoss !Save loss torque in the m matrix for possible visualization and debug purposes
-		 
 		 AugMat(DOF_GeAz,       DOF_GeAz) = AugMat(DOF_GeAz,DOF_GeAz)                                    &
                                             +  DOT_PRODUCT( RtHSdat%PAngVelEG(DOF_GeAz,0,:), TmpVec                )             ! [C(q,t)]G
          AugMat(DOF_GeAz,         p%NAug) = (AugMat(DOF_GeAz,  p%NAug)                                    &

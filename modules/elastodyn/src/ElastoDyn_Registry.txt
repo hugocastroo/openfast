@@ -820,6 +820,7 @@ typedef	^	ParameterType	LOGICAL	UseAD14	-	-	-	"flag to determine if AeroDyn14 is
 typedef	^	ParameterType	ReKi	DTLInpTrq	{:}	-	-	"Drive train input torque"	kNm
 typedef	^	ParameterType	ReKi	DTLTrq	{:}	-	-	"Drive train loss torque "	kNm
 typedef	^	ParameterType	IntKi	DTLInpN   -	-	-	"Number of inputs to specify losses" -
+typedef	^	ParameterType	LOGICAL	DTLoss	-	-	-	"flag to determine if the mechanical drive train losses are active or not"	-
 # .... ED_AllBlNds option ........................................................................................................
 typedef  ^  ParameterType  IntKi   BldNd_NumOuts        -  -  -  "Number of requested output channels per blade node (ED_AllBldNdOuts)"  -
 typedef  ^  ParameterType  IntKi   BldNd_TotNumOuts     -  -  -  "Total number of requested output channels of blade node information (BldNd_NumOuts * BldNd_BlOutNd * BldNd_BladesOut -- ED_AllBldNdOuts)" -

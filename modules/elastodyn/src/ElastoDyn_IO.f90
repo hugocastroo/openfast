@@ -1415,20 +1415,13 @@ SUBROUTINE ED_ReadInput( InputFileName, MeshFile, InputFileData, ReadAdmVals, BD
          return
       end if
 
-   !get the Drive Train loss data if the DTLoss variable is True HC
-   !InputFileData%DTLoss = .FALSE.
-   !IF ( InputFileData%DTLoss )  THEN
+   !get the Drive Train loss data HC
 	   CALL ReadDTLFile( DTLFile, InputFileData, UnEcho,  ErrStat2, ErrMsg2 )
 		  call SetErrStat(ErrStat2,ErrMsg2,ErrStat,ErrMsg,RoutineName)
 		  if ( ErrStat >= AbortErrLev ) then
 			 call Cleanup()
 			 return
 		  end if
-   !ELSE !initialize the data to 0 if the DTLoss variable is false
-!        InputFileData%DTLInpN = 0
-!		InputFileData%DTLTrq = 0.0_ReKi
-!		InputFileData%DTLInpTrq = 0.0_ReKi
-   !END IF
 	
       ! close the echo file (if opened)
 

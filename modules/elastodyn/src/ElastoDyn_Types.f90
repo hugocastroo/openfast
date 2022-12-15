@@ -819,6 +819,7 @@ IMPLICIT NONE
     REAL(ReKi) , DIMENSION(:), ALLOCATABLE  :: DTLInpTrq      !< Drive train input torque [kNm]
     REAL(ReKi) , DIMENSION(:), ALLOCATABLE  :: DTLTrq      !< Drive train loss torque  [kNm]
     INTEGER(IntKi)  :: DTLInpN      !< Number of inputs to specify losses [-]
+    LOGICAL  :: DTLoss      !< flag to determine if the mechanical drive train losses are active or not [-]
     INTEGER(IntKi)  :: BldNd_NumOuts      !< Number of requested output channels per blade node (ED_AllBldNdOuts) [-]
     INTEGER(IntKi)  :: BldNd_TotNumOuts      !< Total number of requested output channels of blade node information (BldNd_NumOuts * BldNd_BlOutNd * BldNd_BladesOut -- ED_AllBldNdOuts) [-]
     TYPE(OutParmType) , DIMENSION(:), ALLOCATABLE  :: BldNd_OutParam      !< Names and units (and other characteristics) of all requested output parameters [-]
@@ -17908,6 +17909,7 @@ IF (ALLOCATED(SrcParamData%DTLTrq)) THEN
     DstParamData%DTLTrq = SrcParamData%DTLTrq
 ENDIF
     DstParamData%DTLInpN = SrcParamData%DTLInpN
+    DstParamData%DTLoss = SrcParamData%DTLoss
     DstParamData%BldNd_NumOuts = SrcParamData%BldNd_NumOuts
     DstParamData%BldNd_TotNumOuts = SrcParamData%BldNd_TotNumOuts
 IF (ALLOCATED(SrcParamData%BldNd_OutParam)) THEN
@@ -18838,6 +18840,7 @@ ENDIF
       Re_BufSz   = Re_BufSz   + SIZE(InData%DTLTrq)  ! DTLTrq
   END IF
       Int_BufSz  = Int_BufSz  + 1  ! DTLInpN
+      Int_BufSz  = Int_BufSz  + 1  ! DTLoss
       Int_BufSz  = Int_BufSz  + 1  ! BldNd_NumOuts
       Int_BufSz  = Int_BufSz  + 1  ! BldNd_TotNumOuts
   Int_BufSz   = Int_BufSz   + 1     ! BldNd_OutParam allocated yes/no
@@ -20706,6 +20709,8 @@ ENDIF
       END DO
   END IF
     IntKiBuf(Int_Xferred) = InData%DTLInpN
+    Int_Xferred = Int_Xferred + 1
+    IntKiBuf(Int_Xferred) = TRANSFER(InData%DTLoss, IntKiBuf(1))
     Int_Xferred = Int_Xferred + 1
     IntKiBuf(Int_Xferred) = InData%BldNd_NumOuts
     Int_Xferred = Int_Xferred + 1
@@ -22909,6 +22914,8 @@ ENDIF
       END DO
   END IF
     OutData%DTLInpN = IntKiBuf(Int_Xferred)
+    Int_Xferred = Int_Xferred + 1
+    OutData%DTLoss = TRANSFER(IntKiBuf(Int_Xferred), OutData%DTLoss)
     Int_Xferred = Int_Xferred + 1
     OutData%BldNd_NumOuts = IntKiBuf(Int_Xferred)
     Int_Xferred = Int_Xferred + 1
