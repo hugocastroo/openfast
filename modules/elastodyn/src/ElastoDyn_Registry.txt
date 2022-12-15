@@ -208,8 +208,8 @@ typedef	^	ED_InputFile	ReKi	TwSSM2Sh	{:}	-	-	"Tower side-to-side mode-2 shape co
 
 # ..... Drive Train Losses file data ...........................................................................................................
 typedef	^	ED_InputFile	IntKi	DTLInpN	-	-	-	"Number of inputs to specify losses"	-
-typedef	^	ED_InputFile	ReKi	DTLInpTrq	{:}	-	-	"Drive train input torque"	kNm
-typedef	^	ED_InputFile	ReKi	DTLTrq	{:}	-	-	"Drive train loss torque "	kNm
+typedef	^	ED_InputFile	ReKi	DTLInpTrq	9	-	-	"Drive train input torque"	kNm
+typedef	^	ED_InputFile	ReKi	DTLTrq	9	-	-	"Drive train loss torque "	kNm
 
 # ..... Tower Input file data (ADAMS only) ...........................................................................................................
 typedef	^	ED_InputFile	ReKi	TwGJStif	{:}	-	-	"Tower torsional stiffness for a given input station"	Nm^2
@@ -817,8 +817,8 @@ typedef	^	ParameterType	ReKi	PtfmCMxt	-	-	-	"Downwind distance from the ground [
 typedef	^	ParameterType	ReKi	PtfmCMyt	-	-	-	"Lateral distance from the ground [onshore] or MSL [offshore] to the platform CM"	meters
 typedef	^	ParameterType	LOGICAL	BD4Blades	-	-	-	"flag to determine if BeamDyn is computing blade loads (true) or ElastoDyn is (false)"	-
 typedef	^	ParameterType	LOGICAL	UseAD14	-	-	-	"flag to determine if AeroDyn14 is being used. Will remove this later when we've replaced AD14."	-
-typedef	^	ParameterType	ReKi	DTLInpTrq	{:}	-	-	"Drive train input torque"	kNm
-typedef	^	ParameterType	ReKi	DTLTrq	{:}	-	-	"Drive train loss torque "	kNm
+typedef	^	ParameterType	ReKi	DTLInpTrq	9	-	-	"Drive train input torque"	kNm
+typedef	^	ParameterType	ReKi	DTLTrq	9	-	-	"Drive train loss torque "	kNm
 typedef	^	ParameterType	IntKi	DTLInpN   -	-	-	"Number of inputs to specify losses" -
 typedef	^	ParameterType	LOGICAL	DTLoss	-	-	-	"flag to determine if the mechanical drive train losses are active or not"	-
 # .... ED_AllBlNds option ........................................................................................................
