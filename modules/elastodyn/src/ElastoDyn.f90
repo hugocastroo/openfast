@@ -939,6 +939,7 @@ END IF
 
       ! Platform Motions:
 
+		
 		m%AllOuts( PtfmTDxt) =  DOT_PRODUCT(       m%RtHS%rZ, m%CoordSys%a1 )
 		m%AllOuts( PtfmTDyt) = -DOT_PRODUCT(       m%RtHS%rZ, m%CoordSys%a3 )
 		m%AllOuts( PtfmTDzt) =  DOT_PRODUCT(       m%RtHS%rZ, m%CoordSys%a2 )
@@ -8168,6 +8169,7 @@ SUBROUTINE FillAugMat( p, x, CoordSys, u, HSSBrTrq, RtHSdat, AugMat, m) !Changed
    REAL(ReKI)					:: CurrRotTrq										!Current Torque for comparison in Look up table N-m HC
    REAL(ReKI)					:: TMomLPRot(3)										!
    REAL(ReKI)					:: AuxMomLPRot(3)									!Auxiliar variable for calculations HC
+   INTEGER(IntKi)               :: InterpInd         								! Index for the interpolation routine HC
 
    INTEGER(IntKi)               :: I                                               ! Loops through some or all of the DOFs
    INTEGER(IntKi)               :: J                                               ! Counter for elements
@@ -8185,6 +8187,7 @@ SUBROUTINE FillAugMat( p, x, CoordSys, u, HSSBrTrq, RtHSdat, AugMat, m) !Changed
    TMomLPRot = 0.0
    AuxMomLPRot = 0.0
    m%LSSTrqLoss = 0.0
+   InterpInd = 1
    
    DO K = 1,p%NumBl ! Loop through all blades
    
@@ -8520,18 +8523,7 @@ SUBROUTINE FillAugMat( p, x, CoordSys, u, HSSBrTrq, RtHSdat, AugMat, m) !Changed
 
 			TMomLPRot = m%RtHS%MomLPRott + AuxMomLPRot 
 			CurrRotTrq = DOT_PRODUCT(TMomLPRot, m%CoordSys%e1) 			!Calculation of the Current torque HC
-
-			IF(CurrRotTrq .le. p%DTLInpTrq(1)) THEN						!If CurrRotTrq is smaller than the first value in the Look up table, set the loss to the minimum value HC
-				LSSTrqLoss = (p%DTLTrq(1))
-			ELSEIF (CurrRotTrq .ge. p%DTLInpTrq(p%DTLInpN)) THEN 		! IF CurrRotTrq is greater that the biggest values in the look up table, set the loss to the biggest value HC
-				LSSTrqLoss = (p%DTLTrq(p%DTLInpN))
-			ELSE														!Find the two two values in the look up table to make the interpolation
-				DO I = 1,p%DTLInpN
-					IF((p%DTLInpTrq(I) .le. CurrRotTrq)  .AND. (p%DTLInpTrq(I+1) .ge. CurrRotTrq)) THEN
-						LSSTrqLoss = ((p%DTLTrq(I)) + (((p%DTLTrq(I+1))-(p%DTLTrq(I)))*(((CurrRotTrq-(p%DTLInpTrq(I)))/((p%DTLInpTrq(I+1))-(p%DTLInpTrq(I))))))) !Loss Torque calculation using the CurrRotTrq and the look up table values
-					END IF
-				ENDDO
-			ENDIF
+			LSSTrqLoss = InterpBinReal(CurrRotTrq, p%DTLInpTrq, p%DTLTrq, InterpInd, p%DTLInpN) !This funtion returns a y-value that corresponds to an input x-value by interpolating into the arrays.
 			m%LSSTrqLoss = LSSTrqLoss !Save loss torque in the m matrix for possible visualization and debug purposes
 		ENDIF
 		 AugMat(DOF_GeAz,       DOF_GeAz) = AugMat(DOF_GeAz,DOF_GeAz)                                    &
