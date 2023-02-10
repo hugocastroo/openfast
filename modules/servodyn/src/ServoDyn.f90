@@ -5103,6 +5103,13 @@ SUBROUTINE SrvD_SetParameters( InputFileData, p, UnSum, ErrStat, ErrMsg )
       p%Delim = ' '
    END IF           
 
+   !Set parameters for the electrical losses calculation HC
+   p%ElecLoss = .false. 								!Set a false value for the FLAG
+   p%ElecLoss = InputFileData%ElecLoss					!Set the FLAG for the electrical losses calculation according to the ini file
+   p%PLossInpN = InputFileData%PLossInpN				!Set the value for the numer of inputs in the look up table
+   p%PInp = InputFileData%PInp 							!Set the array for the input power for the loss calculation
+   p%PLossEl = InputFileData%PLossEl					!Set the array for the electrical losses values
+
 END SUBROUTINE SrvD_SetParameters
 !----------------------------------------------------------------------------------------------------------------------------------
 !> Routine for computing the yaw output: a yaw moment. This routine is used in both loose and tight coupling.
@@ -5855,6 +5862,10 @@ SUBROUTINE CalculateTorque( t, u, p, m, GenTrq, ElecPwr, ErrStat, ErrMsg )
    REAL(ReKi)                                     :: SlipRat     ! Generator slip ratio
 
    REAL(ReKi)                                     :: S2          ! SlipRat**2
+   
+      !Variables for the drive train mechanical loss HC
+   INTEGER(IntKi)               :: InterpInd         								! Index for the interpolation routine HC
+    REAL(ReKI)					:: CurrElecPow										!Current Electrical power for comparison in Look up table W HC
 
    character(*), parameter                        :: RoutineName = 'CalculateTorque'
 
@@ -5864,6 +5875,10 @@ SUBROUTINE CalculateTorque( t, u, p, m, GenTrq, ElecPwr, ErrStat, ErrMsg )
 
    GenTrq  = 0.0_ReKi
    ElecPwr = 0.0_ReKi
+      !Initialize the extra values for the electrical loss calculation HC
+   InterpInd = 1 !HC
+   CurrElecPow = 0.0
+   m%ElecLoss = 0.0
 
 
          ! Are we doing simple variable-speed control, or using a generator model?
@@ -5985,7 +6000,14 @@ SUBROUTINE CalculateTorque( t, u, p, m, GenTrq, ElecPwr, ErrStat, ErrMsg )
          GenTrq   = 0.0_ReKi
          ElecPwr  = 0.0_ReKi
       ENDIF
-
+	  
+	  !Electrical losses implementation !HC
+		IF (p%ElecLoss) THEN
+			CurrElecPow = ElecPwr
+			m%ElecLoss = InterpBinReal(CurrElecPow, p%PInp, p%PLossEl, InterpInd, p%PLossInpN) !This funtion returns a y-value that corresponds to an input x-value by interpolating into the arrays.
+			ElecPwr = CurrElecPow - m%ElecLoss
+		ENDIF
+		
 
 END SUBROUTINE CalculateTorque
 !----------------------------------------------------------------------------------------------------------------------------------

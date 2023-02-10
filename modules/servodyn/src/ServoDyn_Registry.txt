@@ -172,6 +172,12 @@ typedef	^	SrvD_InputFile	IntKi	CCmode	-	-	-	"Cable control control mode {0: none
 # extended avrSWAP (this is currently hard coded to true in the input parsing -- left this in case we run into issues and need to make it an input file option
 typedef	^	SrvD_InputFile	Logical	EXavrSWAP	-	-	-	"Use extendend AVR swap"	-
 
+# .....Electrical losses implementation file data HC ...........................................................................................................
+typedef	^	SrvD_InputFile	LOGICAL	ElecLoss	-	-	-	"Use Additionan parameters for electrical losses?"	-
+typedef	^	SrvD_InputFile	IntKi	PLossInpN	-	-	-	"Number of inputs to specify electrical losses"	-
+typedef	^	SrvD_InputFile	ReKi	PInp	{:}	-	-	"Power input LSS"	W
+typedef	^	SrvD_InputFile	ReKi	PLossEl	{:}	-	-	"Electric loss "	W
+
 # ..... Data for using Bladed DLLs .......................................................................................................
 typedef	^	BladedDLLType	SiKi	avrSWAP	{:}	-	-	"The swap array: used to pass data to and from the DLL controller"	"see Bladed DLL documentation"
 typedef	^	BladedDLLType	ReKi	HSSBrTrqDemand	-	-	-	"Demanded braking torque - from Bladed DLL"	-
@@ -267,6 +273,7 @@ typedef	^	BladedDLLType	SiKi	StCMeasVel			{:}{:}	-	-	"StC measured local velocit
 #typedef	^	BladedDLLType	SiKi	EXavrSWAP_Lidar       	{:}	-	-	"The swap array: used to pass data from the DLL controller for Lidar       using extended avrSWAP [see EXavrSWAP documentation in BladededInterface_EX]"  -
 #typedef	^	BladedDLLType	SiKi	EXavrSWAP_AeroControls	{:}	-	-	"The swap array: used to pass data from the DLL controller for AeroControls using extended avrSWAP [see EXavrSWAP documentation in BladededInterface_EX]" -
 
+
 # ..... States ....................................................................................................................
 # Define continuous (differentiable) states here:
 typedef	^	ContinuousStateType	ReKi	DummyContState	-	-	-	"Remove this variable if you have continuous states"	-
@@ -343,6 +350,8 @@ typedef	^	MiscVarType	StC_OutputType	y_TStC	{:}	-	-	"StC module outputs - tower"
 typedef	^	MiscVarType	StC_OutputType	y_SStC	{:}	-	-	"StC module outputs - substructure"	-
 typedef	^	MiscVarType	SrvD_ModuleMapType	SrvD_MeshMap	-	-	-	"Mesh mapping from inputs/output meshes to StC input/output meshes"	-
 typedef	^	MiscVarType	IntKi	PrevTstepNcall	-	-1	-	"Previous timestep N for tracking when in predictor/corrector loop for setting StC u values"	-
+typedef	^	MiscVarType	ReKi	ElecLoss   -	-	-	"Electric loss value holder" W
+
 
 # ..... Parameters ................................................................................................................
 # Define parameters here:
@@ -471,7 +480,10 @@ typedef  ^  ParameterType  Integer  Jac_Idx_BStC_y {:}{:}{:} - -  "the start and
 typedef  ^  ParameterType  Integer  Jac_Idx_NStC_y {:}{:}    - -  "the start and end indices of nacelle      StC y jacobian [ start/end, instance ]"  -
 typedef  ^  ParameterType  Integer  Jac_Idx_TStC_y {:}{:}    - -  "the start and end indices of tower        StC y jacobian [ start/end, instance ]"  -
 typedef  ^  ParameterType  Integer  Jac_Idx_SStC_y {:}{:}    - -  "the start and end indices of substructure StC y jacobian [ start/end, instance ]"  -
-
+typedef	^	ParameterType	ReKi	PInp	{:}	-	-	"Power input LSS"	W
+typedef	^	ParameterType	ReKi	PLossEl	{:}	-	-	"DElectric loss "	W
+typedef	^	ParameterType	IntKi	PLossInpN   -	-	-	"Number of inputs to specify electrical losses" -
+typedef	^	ParameterType	LOGICAL	ElecLoss	-	-	-	"flag to determine if theelectrical losses are active or not"	-
 
 
 # ..... Inputs ....................................................................................................................

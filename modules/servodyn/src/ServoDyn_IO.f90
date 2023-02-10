@@ -1433,8 +1433,37 @@ subroutine ParseInputFileInfo( PriPath, InputFile, OutFileRoot, FileInfo_In, Inp
          InputFileData%GenTrq_TLU(i) = TmpRe2(2)          ! GenTrq_TLU - Records R+1:2:R+2*DLL_NumTrq-1: Generator torque values in look-up table (Nm)
       enddo
    endif
-
-
+   
+   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+         !---------------------- Electrical LOSSES------------------------------------HC
+	if ( InputFileData%Echo )   WRITE(UnEcho, '(A)') FileInfo_In%Lines(CurLine)    ! Write section break to echo Electrical losses comment line HC
+   CurLine = CurLine + 1
+		! ElecLoss		- Use Additional electrical losses parameters? (flag): HC
+   call ParseVar( FileInfo_In, CurLine, 'ElecLoss', InputFileData%ElecLoss, ErrStat2, ErrMsg2, UnEcho )
+      if (Failed())  return;
+		! PLossInpN		- Number of rotor input torque steps (-): HC
+   call ParseVar( FileInfo_In, CurLine, 'PLossInpN', InputFileData%PLossInpN, ErrStat2, ErrMsg2, UnEcho )
+      if (Failed())  return;
+	  ! Section break --   PInp   		PLossEl
+   if ( InputFileData%Echo )   WRITE(UnEcho, '(A)') ' Table Header: '//FileInfo_In%Lines(CurLine)    ! Write section break to echo
+   CurLine = CurLine + 1
+   if ( InputFileData%Echo )   WRITE(UnEcho, '(A)') ' Table Units: '//FileInfo_In%Lines(CurLine)    ! Write section break to echo
+   CurLine = CurLine + 1  
+	  
+	if (InputFileData%PLossInpN > 0) then
+      CALL AllocAry( InputFileData%PInp,   InputFileData%PLossInpN, 'PInp', ErrStat2, ErrMsg2 )
+            if (Failed()) return;
+      CALL AllocAry( InputFileData%PLossEl,   InputFileData%PLossInpN, 'PLossEl',ErrStat2, ErrMsg2 )
+            if (Failed()) return;
+         ! TABLE read
+      do i=1,InputFileData%PLossInpN
+         call ParseAry ( FileInfo_In, CurLine, 'Coordinates', TmpRe2, 2, ErrStat2, ErrMsg2, UnEcho )
+               if (Failed()) return;
+         InputFileData%PInp(i) = TmpRe2(1)					! PInp - Input electrical losses steps (W)
+         InputFileData%PLossEl(i) = TmpRe2(2)       	    ! PLossEl - Electrical losses steps (W)
+      enddo
+   endif
+   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
    !---------------------- OUTPUT --------------------------------------------------         
    if ( InputFileData%Echo )   WRITE(UnEcho, '(A)') FileInfo_In%Lines(CurLine)    ! Write section break to echo
    CurLine = CurLine + 1

@@ -183,6 +183,10 @@ IMPLICIT NONE
     REAL(ReKi)  :: AfC_Phase      !< Phase relative to the blade azimuth (0 is vertical) for for cosine cycling of flap signal (deg) [used only with AfCmode==1] [deg]
     INTEGER(IntKi)  :: CCmode      !< Cable control control mode {0: none, 4: user-defined from Simulink/Labview, 5: user-defined from Bladed-style DLL} [-]
     LOGICAL  :: EXavrSWAP      !< Use extendend AVR swap [-]
+    LOGICAL  :: ElecLoss      !< Use Additionan parameters for electrical losses? [-]
+    INTEGER(IntKi)  :: PLossInpN      !< Number of inputs to specify electrical losses [-]
+    REAL(ReKi) , DIMENSION(:), ALLOCATABLE  :: PInp      !< Power input LSS [W]
+    REAL(ReKi) , DIMENSION(:), ALLOCATABLE  :: PLossEl      !< Electric loss  [W]
   END TYPE SrvD_InputFile
 ! =======================
 ! =========  BladedDLLType  =======
@@ -355,6 +359,7 @@ IMPLICIT NONE
     TYPE(StC_OutputType) , DIMENSION(:), ALLOCATABLE  :: y_SStC      !< StC module outputs - substructure [-]
     TYPE(SrvD_ModuleMapType)  :: SrvD_MeshMap      !< Mesh mapping from inputs/output meshes to StC input/output meshes [-]
     INTEGER(IntKi)  :: PrevTstepNcall = -1      !< Previous timestep N for tracking when in predictor/corrector loop for setting StC u values [-]
+    REAL(ReKi)  :: ElecLoss      !< Electric loss value holder [W]
   END TYPE SrvD_MiscVarType
 ! =======================
 ! =========  SrvD_ParameterType  =======
@@ -478,6 +483,10 @@ IMPLICIT NONE
     INTEGER(IntKi) , DIMENSION(:,:), ALLOCATABLE  :: Jac_Idx_NStC_y      !< the start and end indices of nacelle      StC y jacobian [ start/end, instance ] [-]
     INTEGER(IntKi) , DIMENSION(:,:), ALLOCATABLE  :: Jac_Idx_TStC_y      !< the start and end indices of tower        StC y jacobian [ start/end, instance ] [-]
     INTEGER(IntKi) , DIMENSION(:,:), ALLOCATABLE  :: Jac_Idx_SStC_y      !< the start and end indices of substructure StC y jacobian [ start/end, instance ] [-]
+    REAL(ReKi) , DIMENSION(:), ALLOCATABLE  :: PInp      !< Power input LSS [W]
+    REAL(ReKi) , DIMENSION(:), ALLOCATABLE  :: PLossEl      !< DElectric loss  [W]
+    INTEGER(IntKi)  :: PLossInpN      !< Number of inputs to specify electrical losses [-]
+    LOGICAL  :: ElecLoss      !< flag to determine if theelectrical losses are active or not [-]
   END TYPE SrvD_ParameterType
 ! =======================
 ! =========  SrvD_InputType  =======
@@ -2542,6 +2551,32 @@ ENDIF
     DstInputFileData%AfC_Phase = SrcInputFileData%AfC_Phase
     DstInputFileData%CCmode = SrcInputFileData%CCmode
     DstInputFileData%EXavrSWAP = SrcInputFileData%EXavrSWAP
+    DstInputFileData%ElecLoss = SrcInputFileData%ElecLoss
+    DstInputFileData%PLossInpN = SrcInputFileData%PLossInpN
+IF (ALLOCATED(SrcInputFileData%PInp)) THEN
+  i1_l = LBOUND(SrcInputFileData%PInp,1)
+  i1_u = UBOUND(SrcInputFileData%PInp,1)
+  IF (.NOT. ALLOCATED(DstInputFileData%PInp)) THEN 
+    ALLOCATE(DstInputFileData%PInp(i1_l:i1_u),STAT=ErrStat2)
+    IF (ErrStat2 /= 0) THEN 
+      CALL SetErrStat(ErrID_Fatal, 'Error allocating DstInputFileData%PInp.', ErrStat, ErrMsg,RoutineName)
+      RETURN
+    END IF
+  END IF
+    DstInputFileData%PInp = SrcInputFileData%PInp
+ENDIF
+IF (ALLOCATED(SrcInputFileData%PLossEl)) THEN
+  i1_l = LBOUND(SrcInputFileData%PLossEl,1)
+  i1_u = UBOUND(SrcInputFileData%PLossEl,1)
+  IF (.NOT. ALLOCATED(DstInputFileData%PLossEl)) THEN 
+    ALLOCATE(DstInputFileData%PLossEl(i1_l:i1_u),STAT=ErrStat2)
+    IF (ErrStat2 /= 0) THEN 
+      CALL SetErrStat(ErrID_Fatal, 'Error allocating DstInputFileData%PLossEl.', ErrStat, ErrMsg,RoutineName)
+      RETURN
+    END IF
+  END IF
+    DstInputFileData%PLossEl = SrcInputFileData%PLossEl
+ENDIF
  END SUBROUTINE SrvD_CopyInputFile
 
  SUBROUTINE SrvD_DestroyInputFile( InputFileData, ErrStat, ErrMsg, DEALLOCATEpointers )
@@ -2585,6 +2620,12 @@ IF (ALLOCATED(InputFileData%TStCfiles)) THEN
 ENDIF
 IF (ALLOCATED(InputFileData%SStCfiles)) THEN
   DEALLOCATE(InputFileData%SStCfiles)
+ENDIF
+IF (ALLOCATED(InputFileData%PInp)) THEN
+  DEALLOCATE(InputFileData%PInp)
+ENDIF
+IF (ALLOCATED(InputFileData%PLossEl)) THEN
+  DEALLOCATE(InputFileData%PLossEl)
 ENDIF
  END SUBROUTINE SrvD_DestroyInputFile
 
@@ -2739,6 +2780,18 @@ ENDIF
       Re_BufSz   = Re_BufSz   + 1  ! AfC_Phase
       Int_BufSz  = Int_BufSz  + 1  ! CCmode
       Int_BufSz  = Int_BufSz  + 1  ! EXavrSWAP
+      Int_BufSz  = Int_BufSz  + 1  ! ElecLoss
+      Int_BufSz  = Int_BufSz  + 1  ! PLossInpN
+  Int_BufSz   = Int_BufSz   + 1     ! PInp allocated yes/no
+  IF ( ALLOCATED(InData%PInp) ) THEN
+    Int_BufSz   = Int_BufSz   + 2*1  ! PInp upper/lower bounds for each dimension
+      Re_BufSz   = Re_BufSz   + SIZE(InData%PInp)  ! PInp
+  END IF
+  Int_BufSz   = Int_BufSz   + 1     ! PLossEl allocated yes/no
+  IF ( ALLOCATED(InData%PLossEl) ) THEN
+    Int_BufSz   = Int_BufSz   + 2*1  ! PLossEl upper/lower bounds for each dimension
+      Re_BufSz   = Re_BufSz   + SIZE(InData%PLossEl)  ! PLossEl
+  END IF
   IF ( Re_BufSz  .GT. 0 ) THEN 
      ALLOCATE( ReKiBuf(  Re_BufSz  ), STAT=ErrStat2 )
      IF (ErrStat2 /= 0) THEN 
@@ -3057,6 +3110,40 @@ ENDIF
     Int_Xferred = Int_Xferred + 1
     IntKiBuf(Int_Xferred) = TRANSFER(InData%EXavrSWAP, IntKiBuf(1))
     Int_Xferred = Int_Xferred + 1
+    IntKiBuf(Int_Xferred) = TRANSFER(InData%ElecLoss, IntKiBuf(1))
+    Int_Xferred = Int_Xferred + 1
+    IntKiBuf(Int_Xferred) = InData%PLossInpN
+    Int_Xferred = Int_Xferred + 1
+  IF ( .NOT. ALLOCATED(InData%PInp) ) THEN
+    IntKiBuf( Int_Xferred ) = 0
+    Int_Xferred = Int_Xferred + 1
+  ELSE
+    IntKiBuf( Int_Xferred ) = 1
+    Int_Xferred = Int_Xferred + 1
+    IntKiBuf( Int_Xferred    ) = LBOUND(InData%PInp,1)
+    IntKiBuf( Int_Xferred + 1) = UBOUND(InData%PInp,1)
+    Int_Xferred = Int_Xferred + 2
+
+      DO i1 = LBOUND(InData%PInp,1), UBOUND(InData%PInp,1)
+        ReKiBuf(Re_Xferred) = InData%PInp(i1)
+        Re_Xferred = Re_Xferred + 1
+      END DO
+  END IF
+  IF ( .NOT. ALLOCATED(InData%PLossEl) ) THEN
+    IntKiBuf( Int_Xferred ) = 0
+    Int_Xferred = Int_Xferred + 1
+  ELSE
+    IntKiBuf( Int_Xferred ) = 1
+    Int_Xferred = Int_Xferred + 1
+    IntKiBuf( Int_Xferred    ) = LBOUND(InData%PLossEl,1)
+    IntKiBuf( Int_Xferred + 1) = UBOUND(InData%PLossEl,1)
+    Int_Xferred = Int_Xferred + 2
+
+      DO i1 = LBOUND(InData%PLossEl,1), UBOUND(InData%PLossEl,1)
+        ReKiBuf(Re_Xferred) = InData%PLossEl(i1)
+        Re_Xferred = Re_Xferred + 1
+      END DO
+  END IF
  END SUBROUTINE SrvD_PackInputFile
 
  SUBROUTINE SrvD_UnPackInputFile( ReKiBuf, DbKiBuf, IntKiBuf, Outdata, ErrStat, ErrMsg )
@@ -3404,6 +3491,46 @@ ENDIF
     Int_Xferred = Int_Xferred + 1
     OutData%EXavrSWAP = TRANSFER(IntKiBuf(Int_Xferred), OutData%EXavrSWAP)
     Int_Xferred = Int_Xferred + 1
+    OutData%ElecLoss = TRANSFER(IntKiBuf(Int_Xferred), OutData%ElecLoss)
+    Int_Xferred = Int_Xferred + 1
+    OutData%PLossInpN = IntKiBuf(Int_Xferred)
+    Int_Xferred = Int_Xferred + 1
+  IF ( IntKiBuf( Int_Xferred ) == 0 ) THEN  ! PInp not allocated
+    Int_Xferred = Int_Xferred + 1
+  ELSE
+    Int_Xferred = Int_Xferred + 1
+    i1_l = IntKiBuf( Int_Xferred    )
+    i1_u = IntKiBuf( Int_Xferred + 1)
+    Int_Xferred = Int_Xferred + 2
+    IF (ALLOCATED(OutData%PInp)) DEALLOCATE(OutData%PInp)
+    ALLOCATE(OutData%PInp(i1_l:i1_u),STAT=ErrStat2)
+    IF (ErrStat2 /= 0) THEN 
+       CALL SetErrStat(ErrID_Fatal, 'Error allocating OutData%PInp.', ErrStat, ErrMsg,RoutineName)
+       RETURN
+    END IF
+      DO i1 = LBOUND(OutData%PInp,1), UBOUND(OutData%PInp,1)
+        OutData%PInp(i1) = ReKiBuf(Re_Xferred)
+        Re_Xferred = Re_Xferred + 1
+      END DO
+  END IF
+  IF ( IntKiBuf( Int_Xferred ) == 0 ) THEN  ! PLossEl not allocated
+    Int_Xferred = Int_Xferred + 1
+  ELSE
+    Int_Xferred = Int_Xferred + 1
+    i1_l = IntKiBuf( Int_Xferred    )
+    i1_u = IntKiBuf( Int_Xferred + 1)
+    Int_Xferred = Int_Xferred + 2
+    IF (ALLOCATED(OutData%PLossEl)) DEALLOCATE(OutData%PLossEl)
+    ALLOCATE(OutData%PLossEl(i1_l:i1_u),STAT=ErrStat2)
+    IF (ErrStat2 /= 0) THEN 
+       CALL SetErrStat(ErrID_Fatal, 'Error allocating OutData%PLossEl.', ErrStat, ErrMsg,RoutineName)
+       RETURN
+    END IF
+      DO i1 = LBOUND(OutData%PLossEl,1), UBOUND(OutData%PLossEl,1)
+        OutData%PLossEl(i1) = ReKiBuf(Re_Xferred)
+        Re_Xferred = Re_Xferred + 1
+      END DO
+  END IF
  END SUBROUTINE SrvD_UnPackInputFile
 
  SUBROUTINE SrvD_CopyBladedDLLType( SrcBladedDLLTypeData, DstBladedDLLTypeData, CtrlCode, ErrStat, ErrMsg )
@@ -10061,6 +10188,7 @@ ENDIF
          CALL SetErrStat(ErrStat2, ErrMsg2, ErrStat, ErrMsg,RoutineName)
          IF (ErrStat>=AbortErrLev) RETURN
     DstMiscData%PrevTstepNcall = SrcMiscData%PrevTstepNcall
+    DstMiscData%ElecLoss = SrcMiscData%ElecLoss
  END SUBROUTINE SrvD_CopyMisc
 
  SUBROUTINE SrvD_DestroyMisc( MiscData, ErrStat, ErrMsg, DEALLOCATEpointers )
@@ -10548,6 +10676,7 @@ ENDIF
          DEALLOCATE(Int_Buf)
       END IF
       Int_BufSz  = Int_BufSz  + 1  ! PrevTstepNcall
+      Re_BufSz   = Re_BufSz   + 1  ! ElecLoss
   IF ( Re_BufSz  .GT. 0 ) THEN 
      ALLOCATE( ReKiBuf(  Re_BufSz  ), STAT=ErrStat2 )
      IF (ErrStat2 /= 0) THEN 
@@ -11166,6 +11295,8 @@ ENDIF
       ENDIF
     IntKiBuf(Int_Xferred) = InData%PrevTstepNcall
     Int_Xferred = Int_Xferred + 1
+    ReKiBuf(Re_Xferred) = InData%ElecLoss
+    Re_Xferred = Re_Xferred + 1
  END SUBROUTINE SrvD_PackMisc
 
  SUBROUTINE SrvD_UnPackMisc( ReKiBuf, DbKiBuf, IntKiBuf, Outdata, ErrStat, ErrMsg )
@@ -11994,6 +12125,8 @@ ENDIF
       IF(ALLOCATED(Int_Buf)) DEALLOCATE(Int_Buf)
     OutData%PrevTstepNcall = IntKiBuf(Int_Xferred)
     Int_Xferred = Int_Xferred + 1
+    OutData%ElecLoss = ReKiBuf(Re_Xferred)
+    Re_Xferred = Re_Xferred + 1
  END SUBROUTINE SrvD_UnPackMisc
 
  SUBROUTINE SrvD_CopyParam( SrcParamData, DstParamData, CtrlCode, ErrStat, ErrMsg )
@@ -12483,6 +12616,32 @@ IF (ALLOCATED(SrcParamData%Jac_Idx_SStC_y)) THEN
   END IF
     DstParamData%Jac_Idx_SStC_y = SrcParamData%Jac_Idx_SStC_y
 ENDIF
+IF (ALLOCATED(SrcParamData%PInp)) THEN
+  i1_l = LBOUND(SrcParamData%PInp,1)
+  i1_u = UBOUND(SrcParamData%PInp,1)
+  IF (.NOT. ALLOCATED(DstParamData%PInp)) THEN 
+    ALLOCATE(DstParamData%PInp(i1_l:i1_u),STAT=ErrStat2)
+    IF (ErrStat2 /= 0) THEN 
+      CALL SetErrStat(ErrID_Fatal, 'Error allocating DstParamData%PInp.', ErrStat, ErrMsg,RoutineName)
+      RETURN
+    END IF
+  END IF
+    DstParamData%PInp = SrcParamData%PInp
+ENDIF
+IF (ALLOCATED(SrcParamData%PLossEl)) THEN
+  i1_l = LBOUND(SrcParamData%PLossEl,1)
+  i1_u = UBOUND(SrcParamData%PLossEl,1)
+  IF (.NOT. ALLOCATED(DstParamData%PLossEl)) THEN 
+    ALLOCATE(DstParamData%PLossEl(i1_l:i1_u),STAT=ErrStat2)
+    IF (ErrStat2 /= 0) THEN 
+      CALL SetErrStat(ErrID_Fatal, 'Error allocating DstParamData%PLossEl.', ErrStat, ErrMsg,RoutineName)
+      RETURN
+    END IF
+  END IF
+    DstParamData%PLossEl = SrcParamData%PLossEl
+ENDIF
+    DstParamData%PLossInpN = SrcParamData%PLossInpN
+    DstParamData%ElecLoss = SrcParamData%ElecLoss
  END SUBROUTINE SrvD_CopyParam
 
  SUBROUTINE SrvD_DestroyParam( ParamData, ErrStat, ErrMsg, DEALLOCATEpointers )
@@ -12608,6 +12767,12 @@ IF (ALLOCATED(ParamData%Jac_Idx_TStC_y)) THEN
 ENDIF
 IF (ALLOCATED(ParamData%Jac_Idx_SStC_y)) THEN
   DEALLOCATE(ParamData%Jac_Idx_SStC_y)
+ENDIF
+IF (ALLOCATED(ParamData%PInp)) THEN
+  DEALLOCATE(ParamData%PInp)
+ENDIF
+IF (ALLOCATED(ParamData%PLossEl)) THEN
+  DEALLOCATE(ParamData%PLossEl)
 ENDIF
  END SUBROUTINE SrvD_DestroyParam
 
@@ -12980,6 +13145,18 @@ ENDIF
     Int_BufSz   = Int_BufSz   + 2*2  ! Jac_Idx_SStC_y upper/lower bounds for each dimension
       Int_BufSz  = Int_BufSz  + SIZE(InData%Jac_Idx_SStC_y)  ! Jac_Idx_SStC_y
   END IF
+  Int_BufSz   = Int_BufSz   + 1     ! PInp allocated yes/no
+  IF ( ALLOCATED(InData%PInp) ) THEN
+    Int_BufSz   = Int_BufSz   + 2*1  ! PInp upper/lower bounds for each dimension
+      Re_BufSz   = Re_BufSz   + SIZE(InData%PInp)  ! PInp
+  END IF
+  Int_BufSz   = Int_BufSz   + 1     ! PLossEl allocated yes/no
+  IF ( ALLOCATED(InData%PLossEl) ) THEN
+    Int_BufSz   = Int_BufSz   + 2*1  ! PLossEl upper/lower bounds for each dimension
+      Re_BufSz   = Re_BufSz   + SIZE(InData%PLossEl)  ! PLossEl
+  END IF
+      Int_BufSz  = Int_BufSz  + 1  ! PLossInpN
+      Int_BufSz  = Int_BufSz  + 1  ! ElecLoss
   IF ( Re_BufSz  .GT. 0 ) THEN 
      ALLOCATE( ReKiBuf(  Re_BufSz  ), STAT=ErrStat2 )
      IF (ErrStat2 /= 0) THEN 
@@ -13841,6 +14018,40 @@ ENDIF
         END DO
       END DO
   END IF
+  IF ( .NOT. ALLOCATED(InData%PInp) ) THEN
+    IntKiBuf( Int_Xferred ) = 0
+    Int_Xferred = Int_Xferred + 1
+  ELSE
+    IntKiBuf( Int_Xferred ) = 1
+    Int_Xferred = Int_Xferred + 1
+    IntKiBuf( Int_Xferred    ) = LBOUND(InData%PInp,1)
+    IntKiBuf( Int_Xferred + 1) = UBOUND(InData%PInp,1)
+    Int_Xferred = Int_Xferred + 2
+
+      DO i1 = LBOUND(InData%PInp,1), UBOUND(InData%PInp,1)
+        ReKiBuf(Re_Xferred) = InData%PInp(i1)
+        Re_Xferred = Re_Xferred + 1
+      END DO
+  END IF
+  IF ( .NOT. ALLOCATED(InData%PLossEl) ) THEN
+    IntKiBuf( Int_Xferred ) = 0
+    Int_Xferred = Int_Xferred + 1
+  ELSE
+    IntKiBuf( Int_Xferred ) = 1
+    Int_Xferred = Int_Xferred + 1
+    IntKiBuf( Int_Xferred    ) = LBOUND(InData%PLossEl,1)
+    IntKiBuf( Int_Xferred + 1) = UBOUND(InData%PLossEl,1)
+    Int_Xferred = Int_Xferred + 2
+
+      DO i1 = LBOUND(InData%PLossEl,1), UBOUND(InData%PLossEl,1)
+        ReKiBuf(Re_Xferred) = InData%PLossEl(i1)
+        Re_Xferred = Re_Xferred + 1
+      END DO
+  END IF
+    IntKiBuf(Int_Xferred) = InData%PLossInpN
+    Int_Xferred = Int_Xferred + 1
+    IntKiBuf(Int_Xferred) = TRANSFER(InData%ElecLoss, IntKiBuf(1))
+    Int_Xferred = Int_Xferred + 1
  END SUBROUTINE SrvD_PackParam
 
  SUBROUTINE SrvD_UnPackParam( ReKiBuf, DbKiBuf, IntKiBuf, Outdata, ErrStat, ErrMsg )
@@ -14859,6 +15070,46 @@ ENDIF
         END DO
       END DO
   END IF
+  IF ( IntKiBuf( Int_Xferred ) == 0 ) THEN  ! PInp not allocated
+    Int_Xferred = Int_Xferred + 1
+  ELSE
+    Int_Xferred = Int_Xferred + 1
+    i1_l = IntKiBuf( Int_Xferred    )
+    i1_u = IntKiBuf( Int_Xferred + 1)
+    Int_Xferred = Int_Xferred + 2
+    IF (ALLOCATED(OutData%PInp)) DEALLOCATE(OutData%PInp)
+    ALLOCATE(OutData%PInp(i1_l:i1_u),STAT=ErrStat2)
+    IF (ErrStat2 /= 0) THEN 
+       CALL SetErrStat(ErrID_Fatal, 'Error allocating OutData%PInp.', ErrStat, ErrMsg,RoutineName)
+       RETURN
+    END IF
+      DO i1 = LBOUND(OutData%PInp,1), UBOUND(OutData%PInp,1)
+        OutData%PInp(i1) = ReKiBuf(Re_Xferred)
+        Re_Xferred = Re_Xferred + 1
+      END DO
+  END IF
+  IF ( IntKiBuf( Int_Xferred ) == 0 ) THEN  ! PLossEl not allocated
+    Int_Xferred = Int_Xferred + 1
+  ELSE
+    Int_Xferred = Int_Xferred + 1
+    i1_l = IntKiBuf( Int_Xferred    )
+    i1_u = IntKiBuf( Int_Xferred + 1)
+    Int_Xferred = Int_Xferred + 2
+    IF (ALLOCATED(OutData%PLossEl)) DEALLOCATE(OutData%PLossEl)
+    ALLOCATE(OutData%PLossEl(i1_l:i1_u),STAT=ErrStat2)
+    IF (ErrStat2 /= 0) THEN 
+       CALL SetErrStat(ErrID_Fatal, 'Error allocating OutData%PLossEl.', ErrStat, ErrMsg,RoutineName)
+       RETURN
+    END IF
+      DO i1 = LBOUND(OutData%PLossEl,1), UBOUND(OutData%PLossEl,1)
+        OutData%PLossEl(i1) = ReKiBuf(Re_Xferred)
+        Re_Xferred = Re_Xferred + 1
+      END DO
+  END IF
+    OutData%PLossInpN = IntKiBuf(Int_Xferred)
+    Int_Xferred = Int_Xferred + 1
+    OutData%ElecLoss = TRANSFER(IntKiBuf(Int_Xferred), OutData%ElecLoss)
+    Int_Xferred = Int_Xferred + 1
  END SUBROUTINE SrvD_UnPackParam
 
  SUBROUTINE SrvD_CopyInput( SrcInputData, DstInputData, CtrlCode, ErrStat, ErrMsg )

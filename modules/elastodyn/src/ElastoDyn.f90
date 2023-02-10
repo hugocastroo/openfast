@@ -940,7 +940,7 @@ END IF
       ! Platform Motions:
 
 		
-		m%AllOuts( PtfmTDxt) =  DOT_PRODUCT(       m%RtHS%rZ, m%CoordSys%a1 )
+        m%AllOuts( PtfmTDxt) =  DOT_PRODUCT(       m%RtHS%rZ, m%CoordSys%a1 )
 		m%AllOuts( PtfmTDyt) = -DOT_PRODUCT(       m%RtHS%rZ, m%CoordSys%a3 )
 		m%AllOuts( PtfmTDzt) =  DOT_PRODUCT(       m%RtHS%rZ, m%CoordSys%a2 )
 		m%AllOuts( PtfmTDxi) = x%QT  (DOF_Sg )
